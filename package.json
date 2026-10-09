@@ -9,15 +9,21 @@
     "dev": "node --watch src/server.js",
     "test": "node --test",
     "db:verify": "node scripts/verify-database.js",
-    "db:test": "node scripts/test-database-constraints.js"
+    "db:test": "node scripts/test-database-constraints.js",
+    "auth:verify": "node scripts/check-auth-flow.js",
+    "admin:create": "node scripts/create-admin.js"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.7.1",
     "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.14.1"
   }
 }

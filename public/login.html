@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#123a2f">
+    <title>Acesso | OFICINATECH</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/login.js" defer></script>
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <a class="brand login-brand" href="/" aria-label="Voltar para OFICINATECH">
+        <span class="brand-mark" aria-hidden="true">O</span>
+        <span class="brand-copy">
+          <strong>OFICINA<span>TECH</span></strong>
+          <small>GESTÃO DE OFICINA</small>
+        </span>
+      </a>
+
+      <section class="login-content" aria-labelledby="login-title">
+        <p class="eyebrow">ACESSO AO SISTEMA</p>
+        <h1 id="login-title">Entrar na oficina</h1>
+        <p class="login-description">Use suas credenciais para acessar as ferramentas de gestão.</p>
+
+        <form id="login-form" class="login-form">
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" autocomplete="username" maxlength="254" required>
+
+          <label for="password">Senha</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required>
+
+          <p id="login-message" class="login-message" role="alert" aria-live="polite"></p>
+          <button id="login-submit" class="login-submit" type="submit">Entrar</button>
+        </form>
+
+        <a class="back-link" href="/">Voltar à visão geral</a>
+      </section>
+      <footer class="login-footer">OFICINATECH <span>·</span> GERENCIAMENTO DE OFICINA MECÂNICA</footer>
+    </main>
+  </body>
+</html>
