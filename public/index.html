@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f5f2">
+    <title>Visão geral | OFICINATECH</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="application-shell">
+      <aside class="sidebar" aria-label="Navegação principal">
+        <a class="brand" href="/" aria-label="OFICINATECH, visão geral">
+          <span class="brand-mark" aria-hidden="true">O</span>
+          <span class="brand-copy">
+            <strong>OFICINA<span>TECH</span></strong>
+            <small>GESTÃO DE OFICINA</small>
+          </span>
+        </a>
+
+        <nav class="navigation">
+          <p class="navigation-label">OFICINA</p>
+          <a class="navigation-link is-active" href="/" aria-current="page">
+            <span class="nav-index" aria-hidden="true">01</span>
+            <span>Visão geral</span>
+          </a>
+          <span class="navigation-link is-pending" aria-disabled="true">
+            <span class="nav-index" aria-hidden="true">02</span>
+            <span>Ordens de serviço</span>
+            <small>EM BREVE</small>
+          </span>
+
+          <p class="navigation-label">CADASTROS</p>
+          <span class="navigation-link is-pending" aria-disabled="true">
+            <span class="nav-index" aria-hidden="true">03</span>
+            <span>Clientes e veículos</span>
+            <small>EM BREVE</small>
+          </span>
+          <span class="navigation-link is-pending" aria-disabled="true">
+            <span class="nav-index" aria-hidden="true">04</span>
+            <span>Peças e serviços</span>
+            <small>EM BREVE</small>
+          </span>
+          <span class="navigation-link is-pending" aria-disabled="true">
+            <span class="nav-index" aria-hidden="true">05</span>
+            <span>Equipe</span>
+            <small>EM BREVE</small>
+          </span>
+        </nav>
+
+        <div class="sidebar-foot">
+          <span class="environment-dot" aria-hidden="true"></span>
+          <span>AMBIENTE LOCAL</span>
+          <span class="environment-version">v0.1</span>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <p class="breadcrumb">OFICINATECH <span>/</span> PAINEL</p>
+          <time id="today-label" class="today-label"></time>
+        </header>
+
+        <section class="page-heading" aria-labelledby="page-title">
+          <div>
+            <p class="eyebrow">CENTRAL DE OPERAÇÕES</p>
+            <h1 id="page-title">Visão geral</h1>
+            <p class="page-description">Acompanhe a disponibilidade do ambiente e os indicadores da oficina.</p>
+          </div>
+          <button class="refresh-button" id="refresh-status" type="button">
+            <span aria-hidden="true">↻</span>
+            Atualizar status
+          </button>
+        </section>
+
+        <section class="environment-panel" aria-labelledby="environment-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">SISTEMA</p>
+              <h2 id="environment-title">Estado do ambiente</h2>
+            </div>
+            <span class="panel-updated" id="last-checked">Verificando...</span>
+          </div>
+          <div class="status-grid" aria-live="polite" aria-busy="true" id="service-status">
+            <div class="status-item">
+              <span class="status-symbol status-loading" id="api-symbol" aria-hidden="true"></span>
+              <div>
+                <span class="status-name">API</span>
+                <strong id="api-status">Verificando</strong>
+              </div>
+              <span class="status-detail">Servidor da aplicação</span>
+            </div>
+            <div class="status-item">
+              <span class="status-symbol status-loading" id="database-symbol" aria-hidden="true"></span>
+              <div>
+                <span class="status-name">MYSQL</span>
+                <strong id="database-status">Verificando</strong>
+              </div>
+              <span class="status-detail">Banco de dados</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="metrics-section" aria-labelledby="metrics-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">ACOMPANHAMENTO</p>
+              <h2 id="metrics-title">Indicadores da oficina</h2>
+            </div>
+            <span class="data-state">AGUARDANDO MÓDULO DE DADOS</span>
+          </div>
+          <div class="metrics-grid">
+            <article class="metric-item">
+              <span class="metric-label">OS abertas</span>
+              <strong class="metric-value">—</strong>
+              <span class="metric-note">Disponível após integração das ordens</span>
+            </article>
+            <article class="metric-item">
+              <span class="metric-label">Em execução</span>
+              <strong class="metric-value">—</strong>
+              <span class="metric-note">Disponível após integração das ordens</span>
+            </article>
+            <article class="metric-item">
+              <span class="metric-label">Aguardando peças</span>
+              <strong class="metric-value">—</strong>
+              <span class="metric-note">Disponível após integração das ordens</span>
+            </article>
+            <article class="metric-item">
+              <span class="metric-label">Estoque abaixo do mínimo</span>
+              <strong class="metric-value">—</strong>
+              <span class="metric-note">Disponível após integração do estoque</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="activity-section" aria-labelledby="activity-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">MOVIMENTAÇÃO</p>
+              <h2 id="activity-title">Ordens recentes</h2>
+            </div>
+            <span class="activity-period">ÚLTIMAS ATUALIZAÇÕES</span>
+          </div>
+          <div class="empty-state">
+            <span class="empty-marker" aria-hidden="true">—</span>
+            <h3>Nenhuma ordem carregada</h3>
+            <p>As ordens aparecerão aqui quando o módulo estiver conectado ao banco de dados.</p>
+          </div>
+        </section>
+
+        <footer class="page-footer">
+          <span>OFICINATECH</span>
+          <span>GERENCIAMENTO DE OFICINA MECÂNICA</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "oficinatech",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema Web de Gerenciamento de Oficina Mecânica",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "db:verify": "node scripts/verify-database.js",
+    "db:test": "node scripts/test-database-constraints.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.14.1"
+  }
+}
