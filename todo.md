@@ -81,10 +81,12 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Implementar PKs, FKs, `UNIQUE`, `NOT NULL`, `CHECK` e índices iniciais.
 - [x] Inserir dados de referência idempotentes para perfis e status da OS.
 - [ ] Criar dados de teste não sensíveis para desenvolvimento.
-- [ ] Executar o script em um banco limpo e validar criação e integridade.
-- [ ] Testar restrições com inserções e alterações válidas e inválidas.
+- [x] Executar o script em banco limpo e validar criação: 13 tabelas, uma view, 3 perfis, 7 status.
+- [x] Testar restrições UNIQUE, FK e CHECK com `scripts/test-database-constraints.js`; rollback confirmado.
+- [x] Testar restrições UNIQUE, FK e CHECK com `scripts/check-database-constraints.js`; rollback confirmado.
 - [x] Documentar execução local inicial e cuidados com credenciais em `database/README.md`.
 - [ ] Conferir equivalência entre SQL, DER e modelo lógico após execução.
+- [x] Conferir a estrutura implantada contra o modelo: 13 tabelas, 19 FKs e 8 CHECKs.
 
 **Concluída quando:** o banco pode ser recriado do zero pelo script e as restrições principais foram verificadas.
 
@@ -94,15 +96,16 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Criar estrutura inicial para configuração, rotas e testes.
 - [x] Configurar Express, rotas de saúde, 404 e tratamento centralizado de erros.
 - [x] Configurar pool MySQL preguiçoso por variáveis de ambiente e `.env.example` sem credenciais reais.
-- [ ] Criar `.env` local com credenciais MySQL (o arquivo ainda não existe; não versionar).
+- [x] Criar `.env` local com credenciais MySQL; arquivo ignorado pelo Git e não compartilhar.
+- [ ] Criar usuário MySQL exclusivo com privilégios mínimos para a aplicação; o `.env` local usa `root` somente no ambiente de desenvolvimento.
 - [x] Instalar dependências com `npm install` (77 pacotes; auditoria sem vulnerabilidades reportadas).
 - [ ] Definir padrão de validação de entrada e consultas parametrizadas.
 - [ ] Configurar logs úteis para desenvolvimento sem registrar senhas ou dados sensíveis.
 - [x] Configurar logs de inicialização e erros sem expor a configuração do banco.
 - [x] Criar instruções de instalação e execução no `README.md`.
 - [ ] Executar `npm test` e validar a rota de saúde quando Node estiver disponível.
-- [x] Executar `npm test` (3 testes passaram) e validar `GET /api/health` e `GET /` localmente.
-- [ ] Validar a conexão com MySQL quando servidor e credenciais locais estiverem configurados.
+- [x] Executar `npm test` (9 testes passaram) e validar `GET /api/health` e `GET /` localmente.
+- [x] Validar conexão da API com MySQL em `GET /api/health/database` (`connected`).
 
 **Concluída quando:** aplicação inicia localmente, conecta ao MySQL e segue uma estrutura consistente documentada.
 
@@ -123,12 +126,15 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 
 ## Fase 7 — Autenticação e autorização
 
-- [ ] Implementar RF01: login e encerramento de sessão.
-- [ ] Armazenar senhas somente com hash seguro; nunca salvar ou registrar senha em texto puro.
-- [ ] Implementar controle de acesso conforme os perfis definidos.
-- [ ] Proteger rotas e ações no servidor, não apenas ocultar controles na interface.
-- [ ] Validar entradas e proteger sessões conforme a arquitetura escolhida.
-- [ ] Testar acesso autorizado e negado para cada perfil.
+- [x] Implementar RF01: tela de login, endpoints de login/logout e consulta da conta autenticada.
+- [x] Armazenar senha com bcrypt; comando de criação do primeiro administrador não ecoa a senha.
+- [x] Implementar token JWT curto em cookie HttpOnly/SameSite e middleware de autorização por perfil.
+- [ ] Aplicar autenticação e perfil às rotas de negócio conforme cada módulo for criado.
+- [x] Validar entrada, limitar tentativas e revalidar no banco se a conta permanece ativa.
+- [x] Testar acesso anônimo, perfil permitido/negado, senha incorreta/correta e conta inativada.
+- [ ] Criar o primeiro administrador com `npm run admin:create -- "Nome" "email@oficina.com"`.
+- [ ] Criar o primeiro administrador com `npm run admin:create -- "Nome" "email@oficina.com"`.
+- [ ] Configurar `JWT_SECRET` persistente e aleatório nos ambientes de produção.
 
 **Concluída quando:** autenticação e permissões foram verificadas no servidor para os fluxos e perfis definidos.
 
