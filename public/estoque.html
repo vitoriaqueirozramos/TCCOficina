@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Estoque | OFICINATECH</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/estoque.js" defer></script>
+  </head>
+  <body>
+    <div class="application-shell">
+      <aside class="sidebar" aria-label="Navegação principal">
+        <a class="brand" href="/" aria-label="OFICINATECH, visão geral">
+          <span class="brand-mark" aria-hidden="true">O</span>
+          <span class="brand-copy">
+            <strong>OFICINA<span>TECH</span></strong>
+            <small>GESTÃO DE OFICINA</small>
+          </span>
+        </a>
+
+        <nav class="navigation">
+          <p class="navigation-label">OFICINA</p>
+          <a class="navigation-link" href="/">Visão geral</a>
+          <a class="navigation-link" href="/ordens-servico.html">Ordens de serviço</a>
+          <p class="navigation-label">CADASTROS</p>
+          <a class="navigation-link" href="/clientes.html">Clientes e veículos</a>
+          <a class="navigation-link" href="/servicos.html">Serviços</a>
+          <a class="navigation-link" href="/pecas.html">Peças</a>
+          <a class="navigation-link is-active" href="/estoque.html" aria-current="page">Estoque</a>
+          <a class="navigation-link" href="/mecanicos.html">Equipe</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <p class="breadcrumb">OFICINATECH <span>/</span> ESTOQUE</p>
+          <a class="account-link" href="/login.html">Entrar</a>
+        </header>
+
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">INVENTÁRIO</p>
+            <h1>Movimentações de estoque</h1>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Registrar movimento</h2>
+          <form id="estoque-form" class="stacked-form">
+            <div class="field-row">
+              <label>
+                Peça
+                <select id="id_peca" name="id_peca" required></select>
+              </label>
+              <label>
+                Motivo
+                <select id="motivo" name="motivo" required>
+                  <option value="ENTRADA">ENTRADA</option>
+                  <option value="AJUSTE">AJUSTE</option>
+                  <option value="CONSUMO_OS">CONSUMO_OS</option>
+                  <option value="ESTORNO">ESTORNO</option>
+                </select>
+              </label>
+              <label>
+                Quantidade
+                <input id="quantidade_delta" name="quantidade_delta" type="number" step="1" required>
+              </label>
+            </div>
+            <label>
+              Observação
+              <textarea id="observacao" name="observacao" rows="3"></textarea>
+            </label>
+            <button type="submit" class="primary-button">Salvar movimento</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h2>Histórico</h2>
+          <div id="estoque-list" class="table-shell"></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

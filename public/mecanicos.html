@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mecânicos | OFICINATECH</title>
+    <style>
+      :root {
+        --bg: #edf1ec;
+        --paper: #f8faf7;
+        --ink: #142118;
+        --muted: #5d6d5f;
+        --line: #d9e1d7;
+        --forest: #1d4d2d;
+        --forest-deep: #133720;
+        --success: #1c8a4d;
+        --danger: #a73f3f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .shell { max-width: 1100px; margin: 0 auto; padding: 32px 20px 48px; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+      .brand { text-decoration: none; color: var(--forest-deep); font-weight: 700; letter-spacing: 0.08em; }
+      .nav-actions { display: flex; align-items: center; gap: 12px; }
+      .ghost-link, .logout-button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 9px 14px; font: inherit; cursor: pointer; text-decoration: none; }
+      .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 20px 38px rgba(19, 30, 21, 0.04); padding: 24px; }
+      h1 { margin: 0 0 8px; font-size: 2rem; }
+      .subtitle { margin: 0 0 24px; color: var(--muted); }
+      .grid { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 22px; }
+      .panel { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 18px; }
+      .panel h2 { margin: 0 0 16px; font-size: 1.1rem; }
+      form { display: grid; gap: 14px; }
+      label { display: grid; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+      input, select { width: 100%; padding: 10px 12px; border: 1px solid #c7d0c9; border-radius: 6px; font: inherit; }
+      .primary-button { border: 0; border-radius: 6px; background: var(--forest); color: #fff; padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer; }
+      .message { min-height: 22px; margin-top: 10px; font-size: 0.9rem; }
+      .message.error { color: var(--danger); }
+      .message.success { color: var(--success); }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+      th { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+      .empty-state { padding: 18px 10px; color: var(--muted); }
+      .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 14px; }
+      .pagination button { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); padding: 8px 12px; font: inherit; cursor: pointer; }
+      .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
+      @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">OFICINATECH</a>
+        <div class="nav-actions">
+          <a class="ghost-link" href="/">Painel</a>
+          <a class="ghost-link" href="/clientes.html">Clientes</a>
+          <a class="ghost-link" href="/veiculos.html">Veículos</a>
+          <button class="logout-button" id="logout-button" type="button">Sair</button>
+        </div>
+      </header>
+
+      <main class="card">
+        <h1>Equipe</h1>
+        <p class="subtitle">Cadastre os mecânicos e mantenha a atribuição correta para as ordens de serviço.</p>
+
+        <div class="grid">
+          <section class="panel" aria-labelledby="cadastro-title">
+            <h2 id="cadastro-title">Novo mecânico</h2>
+            <form id="mecanico-form">
+              <label>
+                Usuário
+                <select name="id_usuario" required></select>
+              </label>
+
+              <label>
+                Especialidade
+                <input name="especialidade" type="text" required placeholder="Ex.: Suspensão">
+              </label>
+
+              <label>
+                Ativo
+                <select name="ativo">
+                  <option value="true">Ativo</option>
+                  <option value="false">Inativo</option>
+                </select>
+              </label>
+
+              <button class="primary-button" type="submit">Salvar mecânico</button>
+              <button class="ghost-link" id="cancel-edit" type="button" hidden>Cancelar edição</button>
+            </form>
+            <div id="mecanico-message" class="message" aria-live="polite"></div>
+          </section>
+
+          <section class="panel" aria-labelledby="lista-title">
+            <h2 id="lista-title">Mecânicos cadastrados</h2>
+            <label>Buscar mecânico<input id="mechanic-search" type="search" placeholder="Nome, e-mail ou especialidade"></label>
+            <label>Situação<select id="mechanic-active-filter"><option value="">Todas</option><option value="true">Ativos</option><option value="false">Inativos</option></select></label>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Especialidade</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="mecanicos-body"></tbody>
+            </table>
+            <div class="pagination"><button id="mechanics-previous" type="button">Anterior</button><span id="mechanics-page">Página 1 de 1</span><button id="mechanics-next" type="button">Próxima</button></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="/mecanicos.js"></script>
+  </body>
+</html>

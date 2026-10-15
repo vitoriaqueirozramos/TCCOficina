@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ordens de serviço | OFICINATECH</title>
+    <style>
+      :root {
+        --bg: #edf1ec;
+        --paper: #f8faf7;
+        --ink: #142118;
+        --muted: #5d6d5f;
+        --line: #d9e1d7;
+        --forest: #1d4d2d;
+        --forest-deep: #133720;
+        --success: #1c8a4d;
+        --danger: #a73f3f;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--ink); }
+      .shell { max-width: 1200px; margin: 0 auto; padding: 32px 20px 48px; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+      .brand { text-decoration: none; color: var(--forest-deep); font-weight: 700; letter-spacing: 0.08em; }
+      .nav-actions { display: flex; align-items: center; gap: 12px; }
+      .ghost-link, .logout-button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 9px 14px; font: inherit; cursor: pointer; text-decoration: none; }
+      .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 20px 38px rgba(19, 30, 21, 0.04); padding: 24px; }
+      h1 { margin: 0 0 8px; font-size: 2rem; }
+      .subtitle { margin: 0 0 24px; color: var(--muted); }
+      .grid { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 22px; }
+      .panel { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 18px; }
+      .panel h2 { margin: 0 0 16px; font-size: 1.1rem; }
+      form { display: grid; gap: 14px; }
+      label { display: grid; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+      input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #c7d0c9; border-radius: 6px; font: inherit; }
+      textarea { min-height: 100px; resize: vertical; }
+      .inline-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+      .primary-button { border: 0; border-radius: 6px; background: var(--forest); color: #fff; padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer; }
+      .message { min-height: 22px; margin-top: 10px; font-size: 0.9rem; }
+      .message.error { color: var(--danger); }
+      .message.success { color: var(--success); }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+      th { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+      .empty-state { padding: 18px 10px; color: var(--muted); }
+      .detail-panel { margin-top: 22px; }
+      .detail-toolbar { margin-bottom: 18px; }
+      .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+      .mini-form { display: grid; gap: 12px; }
+      .mini-form .inline-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      @media (max-width: 760px) { .grid, .detail-grid { grid-template-columns: 1fr; } .inline-fields { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">OFICINATECH</a>
+        <div class="nav-actions">
+          <a class="ghost-link" href="/">Painel</a>
+          <a class="ghost-link" href="/clientes.html">Clientes</a>
+          <a class="ghost-link" href="/servicos.html">Serviços</a>
+          <a class="ghost-link" href="/pecas.html">Peças</a>
+          <button class="logout-button" id="logout-button" type="button">Sair</button>
+        </div>
+      </header>
+
+      <main class="card">
+        <h1>Ordens de serviço</h1>
+        <p class="subtitle">Abra e acompanhe as ordens de trabalho da oficina.</p>
+
+        <div class="grid">
+          <section class="panel" aria-labelledby="cadastro-title">
+            <h2 id="cadastro-title">Nova ordem</h2>
+            <form id="ordem-form">
+              <label>
+                Cliente
+                <select name="id_cliente" required></select>
+              </label>
+
+              <label>
+                Veículo
+                <select name="id_veiculo" required></select>
+              </label>
+
+              <label>
+                Mecânico
+                <select name="id_mecanico"></select>
+              </label>
+
+              <div class="inline-fields">
+                <label>
+                  Quilometragem
+                  <input name="quilometragem_entrada" type="number" min="0" placeholder="45000">
+                </label>
+                <label>
+                  Previsão de conclusão
+                  <input name="previsao_conclusao" type="datetime-local">
+                </label>
+              </div>
+
+              <label>
+                Diagnóstico
+                <textarea name="diagnostico" placeholder="Descreva o problema observado"></textarea>
+              </label>
+
+              <label>
+                Observações
+                <textarea name="observacoes" placeholder="Observações adicionais"></textarea>
+              </label>
+
+              <button class="primary-button" type="submit">Salvar ordem</button>
+            </form>
+            <div id="ordem-message" class="message" aria-live="polite"></div>
+          </section>
+
+          <section class="panel" aria-labelledby="lista-title">
+            <h2 id="lista-title">Ordens em aberto</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Veículo</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="ordens-body"></tbody>
+            </table>
+          </section>
+        </div>
+
+        <section class="panel detail-panel" aria-labelledby="detalhes-title">
+          <h2 id="detalhes-title">Detalhes da ordem</h2>
+
+          <div class="detail-toolbar">
+            <label>
+              Ordem selecionada
+              <select id="ordem-detalhe-select"></select>
+            </label>
+            <p>Total da ordem: <strong id="ordem-total">R$ 0,00</strong></p>
+          </div>
+
+          <div class="detail-grid">
+            <div>
+              <h3>Status e histórico</h3>
+              <form id="status-update-form" class="mini-form">
+                <label>
+                  Novo status
+                  <select id="status-update-select" name="id_status_os" required></select>
+                </label>
+                <label>
+                  Observação
+                  <input name="observacao" type="text" placeholder="Descreva a mudança de status">
+                </label>
+                <button class="primary-button" type="submit">Atualizar status</button>
+              </form>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Usuário</th>
+                    <th>Data</th>
+                  </tr>
+                </thead>
+                <tbody id="status-historico-body"></tbody>
+              </table>
+            </div>
+
+            <div>
+              <h3>Serviços</h3>
+              <form id="service-item-form" class="mini-form">
+                <label>
+                  Serviço
+                  <select id="id_servico" name="id_servico" required></select>
+                </label>
+                <div class="inline-fields">
+                  <label>
+                    Quantidade
+                    <input name="quantidade" type="number" min="1" step="1" value="1" required>
+                  </label>
+                  <label>
+                    Valor unitário
+                    <input name="valor_unitario" type="number" min="0" step="0.01" required>
+                  </label>
+                </div>
+                <label>
+                  Descrição
+                  <input name="descricao_snapshot" type="text" placeholder="Descrição do serviço" required>
+                </label>
+                <button class="primary-button" type="submit">Adicionar serviço</button>
+                <button class="ghost-link" id="cancel-service-edit" type="button" hidden>Cancelar edição</button>
+              </form>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Serviço</th>
+                    <th>Qtd.</th>
+                    <th>Valor</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="os-servicos-body"></tbody>
+              </table>
+            </div>
+
+            <div>
+              <h3>Peças</h3>
+              <form id="part-item-form" class="mini-form">
+                <label>
+                  Peça
+                  <select id="id_peca" name="id_peca" required></select>
+                </label>
+                <div class="inline-fields">
+                  <label>
+                    Quantidade
+                    <input name="quantidade" type="number" min="1" step="1" value="1" required>
+                  </label>
+                  <label>
+                    Valor unitário
+                    <input name="valor_unitario" type="number" min="0" step="0.01" required>
+                  </label>
+                </div>
+                <label>
+                  Descrição
+                  <input name="descricao_snapshot" type="text" placeholder="Descrição da peça" required>
+                </label>
+                <button class="primary-button" type="submit">Adicionar peça</button>
+                <button class="ghost-link" id="cancel-part-edit" type="button" hidden>Cancelar edição</button>
+              </form>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Peça</th>
+                    <th>Qtd.</th>
+                    <th>Valor</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="os-pecas-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/ordens-servico.js"></script>
+  </body>
+</html>

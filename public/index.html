@@ -25,28 +25,32 @@
             <span class="nav-index" aria-hidden="true">01</span>
             <span>Visão geral</span>
           </a>
-          <span class="navigation-link is-pending" aria-disabled="true">
+          <a class="navigation-link" href="/ordens-servico.html">
             <span class="nav-index" aria-hidden="true">02</span>
             <span>Ordens de serviço</span>
-            <small>EM BREVE</small>
-          </span>
+          </a>
 
           <p class="navigation-label">CADASTROS</p>
-          <span class="navigation-link is-pending" aria-disabled="true">
+          <a class="navigation-link" href="/clientes.html">
             <span class="nav-index" aria-hidden="true">03</span>
             <span>Clientes e veículos</span>
-            <small>EM BREVE</small>
-          </span>
-          <span class="navigation-link is-pending" aria-disabled="true">
+          </a>
+          <a class="navigation-link" href="/servicos.html">
             <span class="nav-index" aria-hidden="true">04</span>
-            <span>Peças e serviços</span>
-            <small>EM BREVE</small>
-          </span>
-          <span class="navigation-link is-pending" aria-disabled="true">
+            <span>Serviços</span>
+          </a>
+          <a class="navigation-link" href="/pecas.html">
             <span class="nav-index" aria-hidden="true">05</span>
+            <span>Peças</span>
+          </a>
+          <a class="navigation-link" href="/estoque.html">
+            <span class="nav-index" aria-hidden="true">06</span>
+            <span>Estoque</span>
+          </a>
+          <a class="navigation-link" href="/mecanicos.html">
+            <span class="nav-index" aria-hidden="true">07</span>
             <span>Equipe</span>
-            <small>EM BREVE</small>
-          </span>
+          </a>
         </nav>
 
         <div class="sidebar-foot">
@@ -114,23 +118,23 @@
           <div class="metrics-grid">
             <article class="metric-item">
               <span class="metric-label">OS abertas</span>
-              <strong class="metric-value">—</strong>
-              <span class="metric-note">Disponível após integração das ordens</span>
+              <strong class="metric-value" id="metric-os-abertas">—</strong>
+              <span class="metric-note">Acompanhamento em tempo real</span>
             </article>
             <article class="metric-item">
               <span class="metric-label">Em execução</span>
-              <strong class="metric-value">—</strong>
-              <span class="metric-note">Disponível após integração das ordens</span>
+              <strong class="metric-value" id="metric-os-em-execucao">—</strong>
+              <span class="metric-note">Ordens em uma etapa ativa</span>
             </article>
             <article class="metric-item">
               <span class="metric-label">Aguardando peças</span>
-              <strong class="metric-value">—</strong>
-              <span class="metric-note">Disponível após integração das ordens</span>
+              <strong class="metric-value" id="metric-os-aguardando-pecas">—</strong>
+              <span class="metric-note">Itens dependentes de reposição</span>
             </article>
             <article class="metric-item">
               <span class="metric-label">Estoque abaixo do mínimo</span>
-              <strong class="metric-value">—</strong>
-              <span class="metric-note">Disponível após integração do estoque</span>
+              <strong class="metric-value" id="metric-pecas-abaixo-minimo">—</strong>
+              <span class="metric-note">Produtos com consumo crítico</span>
             </article>
           </div>
         </section>
@@ -143,11 +147,7 @@
             </div>
             <span class="activity-period">ÚLTIMAS ATUALIZAÇÕES</span>
           </div>
-          <div class="empty-state">
-            <span class="empty-marker" aria-hidden="true">—</span>
-            <h3>Nenhuma ordem carregada</h3>
-            <p>As ordens aparecerão aqui quando o módulo estiver conectado ao banco de dados.</p>
-          </div>
+          <div id="recent-orders-list" aria-live="polite"></div>
         </section>
 
         <footer class="page-footer">
