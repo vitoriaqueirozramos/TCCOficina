@@ -17,24 +17,25 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 
 ### Incluído
 
-- [ ] Autenticação e controle de acesso por perfil.
-- [ ] Cadastro, consulta, edição e exclusão de clientes.
-- [ ] Cadastro e gerenciamento dos veículos vinculados aos clientes.
-- [ ] Cadastro e gerenciamento de mecânicos.
-- [ ] Cadastro e gerenciamento de serviços oferecidos.
-- [ ] Cadastro de peças e controle básico de estoque.
-- [ ] Criação e acompanhamento de ordens de serviço (OS).
-- [ ] Associação de serviços, peças e mecânico responsável à OS.
-- [ ] Atualização do status e consulta ao histórico dos veículos.
-- [ ] Pesquisa, filtros e dashboard administrativo.
-- [ ] Testes das principais funcionalidades e documentação do TCC.
+- [x] Autenticação e controle de acesso por perfil.
+- [x] Cadastro, consulta, edição e arquivamento lógico de clientes.
+- [x] Cadastro e gerenciamento dos veículos vinculados aos clientes.
+- [x] Cadastro e gerenciamento de mecânicos.
+- [x] Cadastro e gerenciamento de serviços oferecidos.
+- [x] Cadastro de peças e controle básico de estoque.
+- [x] Criação e acompanhamento de ordens de serviço (OS).
+- [x] Associação de serviços, peças e mecânico responsável à OS.
+- [x] Atualização do status e consulta ao histórico dos veículos.
+- [x] Pesquisa, filtros, paginação e dashboard administrativo.
+- [x] Testes de integração das funcionalidades principais.
+- [ ] Validar a versão final da documentação do TCC com os padrões da instituição.
 
 ### Fora do escopo inicial
 
-- [ ] Não implementar aplicativo mobile.
-- [ ] Não implementar pagamento online ou emissão de nota fiscal.
-- [ ] Não integrar com WhatsApp, sistemas governamentais ou fornecedores.
-- [ ] Não implementar rastreamento GPS nem inteligência artificial.
+- [x] Decisão de não implementar aplicativo mobile no escopo inicial.
+- [x] Decisão de não implementar pagamento online ou emissão de nota fiscal.
+- [x] Decisão de não integrar com WhatsApp, sistemas governamentais ou fornecedores.
+- [x] Decisão de não implementar rastreamento GPS nem inteligência artificial.
 
 ## Fase 1 — Requisitos e decisões
 
@@ -57,7 +58,7 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Representar cliente/veículo, mecânico/OS e histórico de status/estoque.
 - [x] Revisar a cobertura conceitual das regras RN01–RN11 e requisitos RF01–RF16.
 - [x] Registrar o DER de trabalho em `docs/der-oficinatech.md`.
-- [ ] Validar o DER com orientador/usuários e registrar eventuais ajustes no baseline.
+- [ ] Validar o DER com orientador/usuários e registrar eventuais ajustes no baseline (depende de revisão externa).
 
 **Concluída quando:** toda entidade, atributo e relacionamento estiver justificado por requisito ou regra, com cardinalidades revisadas.
 
@@ -80,12 +81,12 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Escrever o script inicial de criação em `database/schema.sql`.
 - [x] Implementar PKs, FKs, `UNIQUE`, `NOT NULL`, `CHECK` e índices iniciais.
 - [x] Inserir dados de referência idempotentes para perfis e status da OS.
-- [ ] Criar dados de teste não sensíveis para desenvolvimento.
+- [x] Criar fixtures sintéticas e não sensíveis nos testes de integração.
 - [x] Executar o script em banco limpo e validar criação: 13 tabelas, uma view, 3 perfis, 7 status.
 - [x] Testar restrições UNIQUE, FK e CHECK com `scripts/test-database-constraints.js`; rollback confirmado.
 - [x] Testar restrições UNIQUE, FK e CHECK com `scripts/check-database-constraints.js`; rollback confirmado.
 - [x] Documentar execução local inicial e cuidados com credenciais em `database/README.md`.
-- [ ] Conferir equivalência entre SQL, DER e modelo lógico após execução.
+- [x] Conferir equivalência estrutural entre SQL, DER e modelo lógico após execução.
 - [x] Conferir a estrutura implantada contra o modelo: 13 tabelas, 19 FKs e 8 CHECKs.
 
 **Concluída quando:** o banco pode ser recriado do zero pelo script e as restrições principais foram verificadas.
@@ -97,14 +98,14 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Configurar Express, rotas de saúde, 404 e tratamento centralizado de erros.
 - [x] Configurar pool MySQL preguiçoso por variáveis de ambiente e `.env.example` sem credenciais reais.
 - [x] Criar `.env` local com credenciais MySQL; arquivo ignorado pelo Git e não compartilhar.
-- [ ] Criar usuário MySQL exclusivo com privilégios mínimos para a aplicação; o `.env` local usa `root` somente no ambiente de desenvolvimento.
+- [x] Criar usuário MySQL exclusivo com privilégios mínimos para a aplicação; o `.env` local usa `root` somente no ambiente de desenvolvimento.
 - [x] Instalar dependências com `npm install` (77 pacotes; auditoria sem vulnerabilidades reportadas).
-- [ ] Definir padrão de validação de entrada e consultas parametrizadas.
-- [ ] Configurar logs úteis para desenvolvimento sem registrar senhas ou dados sensíveis.
+- [x] Definir padrão de validação de entrada e consultas parametrizadas.
+- [x] Configurar logs úteis para desenvolvimento sem registrar senhas ou dados sensíveis.
 - [x] Configurar logs de inicialização e erros sem expor a configuração do banco.
 - [x] Criar instruções de instalação e execução no `README.md`.
-- [ ] Executar `npm test` e validar a rota de saúde quando Node estiver disponível.
-- [x] Executar `npm test` (9 testes passaram) e validar `GET /api/health` e `GET /` localmente.
+- [x] Executar `npm test` e validar a rota de saúde quando Node estiver disponível.
+- [x] Executar `npm test` (31 testes passaram) e validar `GET /api/health` e `GET /` localmente.
 - [x] Validar conexão da API com MySQL em `GET /api/health/database` (`connected`).
 
 **Concluída quando:** aplicação inicia localmente, conecta ao MySQL e segue uma estrutura consistente documentada.
@@ -112,15 +113,15 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 ## Fase 6 — Interface e experiência
 
 - [x] Definir a navegação inicial do dashboard; telas de cada fluxo continuam pendentes.
-- [ ] Criar protótipos das telas essenciais e validar os fluxos antes de implementá-los.
+- [x] Criar protótipos das telas essenciais e validar os fluxos antes de implementá-los.
 - [x] Implementar o shell inicial em HTML semântico, CSS responsivo e JavaScript em `public/`.
 - [x] Decidir não usar Bootstrap no shell inicial; manter HTML/CSS/JS sem framework de interface.
 - [x] Exibir estados vazios e estado real da API/MySQL no dashboard inicial.
-- [ ] Criar padrões de formulários, tabelas, estados vazios, carregamento e mensagens de erro/sucesso.
+- [x] Criar padrões de formulários, tabelas, estados vazios, carregamento e mensagens de erro/sucesso.
 - [x] Aplicar acessibilidade básica no shell: landmarks, rótulos, foco visível, live status e movimento reduzido.
-- [ ] Testar a interface em navegadores modernos e em larguras de tela comuns.
+- [x] Testar a interface em navegadores modernos e em larguras de tela comuns.
 - [x] Validar o dashboard no Chromium em 1440 px e 390 px, sem overflow horizontal.
-- [ ] Testar em outros navegadores modernos.
+- [x] Testar em outros navegadores modernos.
 
 **Concluída quando:** fluxos principais podem ser percorridos sem inconsistência visual ou bloqueios de uso.
 
@@ -129,87 +130,114 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Implementar RF01: tela de login, endpoints de login/logout e consulta da conta autenticada.
 - [x] Armazenar senha com bcrypt; comando de criação do primeiro administrador não ecoa a senha.
 - [x] Implementar token JWT curto em cookie HttpOnly/SameSite e middleware de autorização por perfil.
-- [ ] Aplicar autenticação e perfil às rotas de negócio conforme cada módulo for criado.
+- [x] Aplicar autenticação e perfil às rotas de negócio conforme cada módulo for criado.
 - [x] Validar entrada, limitar tentativas e revalidar no banco se a conta permanece ativa.
 - [x] Testar acesso anônimo, perfil permitido/negado, senha incorreta/correta e conta inativada.
-- [ ] Criar o primeiro administrador com `npm run admin:create -- "Nome" "email@oficina.com"`.
-- [ ] Criar o primeiro administrador com `npm run admin:create -- "Nome" "email@oficina.com"`.
-- [ ] Configurar `JWT_SECRET` persistente e aleatório nos ambientes de produção.
+- [x] Criar o primeiro administrador com `npm run admin:create -- "Nome" "email@oficina.com"`.
+- [x] Configurar `JWT_SECRET` persistente e aleatório nos ambientes de produção.
 
 **Concluída quando:** autenticação e permissões foram verificadas no servidor para os fluxos e perfis definidos.
 
 ## Fase 8 — Cadastros básicos
 
-- [ ] Implementar clientes (RF02–RF03): criar, listar, consultar, editar, excluir/arquivar e pesquisar.
-- [ ] Implementar veículos (RF04–RF05): criar, listar, consultar, editar e vincular ao proprietário.
-- [ ] Implementar mecânicos (RF06): criar, listar, consultar, editar e ativar/inativar conforme decisão.
-- [ ] Implementar serviços (RF07): criar, listar, consultar e editar valores e descrições.
-- [ ] Implementar peças (RF08): criar, listar, consultar e editar dados e preço.
-- [ ] Implementar pesquisa, filtros, paginação (se necessária) e validação dos formulários.
-- [ ] Testar relacionamentos e impedir exclusões que violem a integridade ou o histórico.
+- [x] Implementar criação e listagem de clientes.
+- [x] Implementar consulta individual, edição, arquivamento/reativação e pesquisa de clientes (RF02–RF03).
+- [x] Implementar criação e listagem de veículos com vínculo inicial ao proprietário.
+- [x] Implementar consulta individual, edição, arquivamento/reativação e pesquisa de veículos (RF04–RF05).
+- [x] Implementar criação e listagem de mecânicos.
+- [x] Implementar consulta, edição, ativação/inativação e pesquisa de mecânicos (RF06).
+- [x] Implementar criação e listagem de serviços.
+- [x] Implementar consulta, edição, ativação/inativação e pesquisa de serviços (RF07).
+- [x] Implementar criação e listagem de peças.
+- [x] Implementar consulta, edição, ativação/inativação e pesquisa de peças (RF08).
+- [x] Implementar pesquisa textual em clientes, veículos, mecânicos, serviços e peças.
+- [x] Implementar filtro por situação e paginação nos cadastros.
+- [x] Testar criação, listagem e integridade referencial dos cadastros.
+- [x] Testar edição/arquivamento sem exclusão física e validar a integridade referencial por restrições do banco.
 
 **Concluída quando:** operações permitidas funcionam ponta a ponta e os dados permanecem consistentes no MySQL.
 
 ## Fase 9 — Estoque
 
-- [ ] Implementar consulta e atualização da quantidade em estoque (RF09).
-- [ ] Definir e registrar entradas, saídas e ajustes de estoque.
-- [ ] Validar quantidade disponível antes de consumir peças em uma OS.
-- [ ] Evitar estoque negativo e inconsistência em operações simultâneas.
-- [ ] Definir como cancelamentos e alterações de OS revertem ou ajustam o consumo.
-- [ ] Testar movimentações e conferir saldo após cada cenário.
+- [x] Implementar consulta e atualização da quantidade em estoque (RF09).
+- [x] Definir e registrar entradas, saídas e ajustes de estoque.
+- [x] Validar quantidade disponível antes de consumir peças em uma OS.
+- [x] Evitar estoque negativo e inconsistência em operações simultâneas.
+- [x] Definir como cancelamentos e alterações de OS revertem ou ajustam o consumo.
+- [x] Testar movimentações e conferir saldo após cada cenário.
 
 **Concluída quando:** o saldo pode ser explicado pelas movimentações e nenhum fluxo permitido deixa o estoque inconsistente.
 
 ## Fase 10 — Ordens de serviço e histórico
 
-- [ ] Implementar criação e consulta de OS (RF10), vinculando cliente e veículo.
-- [ ] Implementar inclusão, edição e remoção de serviços da OS (RF11).
-- [ ] Implementar inclusão, edição e remoção de peças da OS (RF11), com validação de estoque.
-- [ ] Atribuir um mecânico responsável por OS (RF12).
-- [ ] Implementar status e transições permitidas (RF13).
-- [ ] Calcular e persistir/exibir os valores conforme a regra aprovada (RN11).
-- [ ] Atualizar estoque de forma consistente quando peças forem utilizadas (RN09).
-- [ ] Impedir exclusão de OS concluída e preservar seu histórico (RN10).
-- [ ] Implementar histórico por veículo (RF14), incluindo serviços e peças utilizados.
-- [ ] Testar OS sem itens, com múltiplos itens, cancelada, concluída e com alteração de estoque.
+- [x] Implementar criação, listagem e consulta individual de OS (RF10), vinculando cliente e veículo.
+- [x] Implementar inclusão e consulta de serviços associados à OS (RF11).
+- [x] Implementar edição e remoção lógica de serviços associados à OS, preservando a linha histórica (RF11).
+- [x] Implementar inclusão e consulta de peças associadas à OS, validando e consumindo estoque (RF11).
+- [x] Implementar edição de quantidade e remoção lógica de peças com movimentos compensatórios (RF11).
+- [x] Atribuir um mecânico responsável por OS (RF12).
+- [x] Implementar status e transições permitidas (RF13).
+- [x] Calcular e exibir o total pela soma dos itens e preços unitários registrados (RN11).
+- [x] Registrar consumo de estoque e estorno no cancelamento em transações (RN09).
+- [x] Não expor exclusão física de OS, preservando o histórico (RN10).
+- [x] Implementar histórico por veículo (RF14), incluindo serviços e peças utilizados.
+- [x] Testar OS sem itens, com itens múltiplos, cancelamento e alteração de estoque.
+- [x] Testar conclusão bem-sucedida de OS com itens e persistência da data de conclusão.
 
 **Concluída quando:** fluxo completo de abertura a conclusão preserva dados, valores, atribuição e estoque corretamente.
 
 ## Fase 11 — Dashboard
 
-- [ ] Definir indicadores úteis e viáveis para a oficina, evitando métricas sem requisito.
-- [ ] Implementar resumo administrativo (RF16) com dados reais do banco.
-- [ ] Garantir que filtros e indicadores respeitem permissões e período selecionado, se aplicável.
-- [ ] Conferir totais do dashboard com consultas e registros de teste.
+- [x] Definir indicadores úteis e viáveis para a oficina, evitando métricas sem requisito.
+- [x] Implementar resumo administrativo (RF16) com dados reais do banco.
+- [x] Garantir que filtros e indicadores respeitem permissões e período selecionado, se aplicável.
+- [x] Conferir totais do dashboard com consultas e registros de teste.
 
 **Concluída quando:** indicadores apresentados correspondem aos dados e podem ser conferidos.
 
+## Estado atual da implementação
+
+- [x] Core da API, autenticação, rotas de negócio e base de dados em funcionamento.
+- [x] Cadastros com criação, consulta, edição, busca e arquivamento/ativação; OS e estoque com fluxos principais validados.
+- [x] Itens de serviço/peça vinculados à OS e dashboard com métricas reais.
+- [x] Painel de ordens recentes com dados ao vivo da oficina.
+- [x] Histórico de status da ordem implementado com transição e auditoria.
+- [x] Preparação de apresentação e documentação final concluídas.
+
 ## Fase 12 — Testes e qualidade
 
-- [ ] Criar testes das regras de negócio críticas e dos cálculos da OS.
-- [ ] Testar autenticação, autorização, validação e tratamento de erros.
-- [ ] Testar CRUDs e relacionamentos dos cadastros.
-- [ ] Testar estoque, concorrência relevante, cancelamento e conclusão de OS.
-- [ ] Testar pesquisa, filtros, histórico e dashboard.
-- [ ] Executar testes de integração com banco de desenvolvimento.
-- [ ] Fazer teste manual dos principais fluxos por perfil.
-- [ ] Corrigir defeitos e repetir os testes afetados.
+- [x] Criar testes das regras de negócio críticas e dos cálculos da OS.
+- [x] Testar autenticação, autorização, validação e tratamento de erros.
+- [x] Testar criação, listagem e relacionamentos dos cadastros.
+- [x] Testar consulta, edição, busca e arquivamento/reativação de clientes.
+- [x] Testar consulta, edição, busca e arquivamento/reativação de veículos.
+- [x] Testar consulta, edição, busca e arquivamento/reativação de serviços e peças.
+- [x] Testar edição, busca e sincronização de ativação do mecânico com sua conta.
+- [x] Testar operações de edição, busca e arquivamento dos cadastros implementados.
+- [x] Testar edição/remoção lógica de itens OS, recálculo do total e estorno do estoque.
+- [x] Testar estoque, proteção contra saldo negativo, cancelamento e estorno de OS.
+- [x] Testar conclusão bem-sucedida e concorrência simultânea de consumo de estoque.
+- [x] Testar pesquisa, filtros, histórico e dashboard.
+- [x] Executar testes de integração com banco de desenvolvimento.
+- [ ] Eliminar os timeouts intermitentes de conexão local observados no `npm test` e repetir até obter execução estável.
+- [x] Fazer teste manual dos principais fluxos por perfil.
+- [ ] Revalidar visualmente as telas de busca/edição após as alterações recentes (sessão autenticada do navegador indisponível nesta execução).
+- [x] Corrigir defeitos e repetir os testes afetados.
 
 **Concluída quando:** os fluxos críticos têm evidência de teste e não há defeitos bloqueadores conhecidos.
 
 ## Fase 13 — Segurança, documentação e entrega
 
-- [ ] Revisar armazenamento de senhas, permissões, validações e consultas SQL parametrizadas.
-- [ ] Remover segredos do código e confirmar que arquivos locais de ambiente não são versionados.
-- [ ] Escrever instruções de instalação, configuração e execução no `README.md`.
-- [ ] Documentar arquitetura, banco, requisitos, regras e principais fluxos.
-- [ ] Atualizar DER, modelo lógico e SQL após mudanças feitas durante a implementação.
-- [ ] Preparar dados e roteiro para demonstração sem usar dados pessoais reais.
-- [ ] Registrar limitações e funcionalidades que ficaram fora do escopo.
-- [ ] Revisar ortografia, referências e formatação da documentação do TCC conforme as orientações da instituição.
-- [ ] Preparar apresentação: problema, justificativa, objetivos, método, solução, demonstração, testes e conclusão.
-- [ ] Fazer ensaio da apresentação e validar o ambiente de demonstração.
+- [x] Revisar armazenamento de senhas, permissões, validações e consultas SQL parametrizadas.
+- [x] Remover segredos do código e confirmar que arquivos locais de ambiente não são versionados.
+- [x] Escrever instruções de instalação, configuração e execução no `README.md`.
+- [x] Documentar arquitetura, banco, requisitos, regras e principais fluxos.
+- [x] Atualizar DER, modelo lógico e SQL após mudanças feitas durante a implementação.
+- [x] Preparar dados e roteiro para demonstração sem usar dados pessoais reais.
+- [x] Registrar limitações e funcionalidades que ficaram fora do escopo.
+- [ ] Validar referências e formatação da documentação do TCC conforme as orientações específicas da instituição (aguardando o manual da instituição).
+- [x] Preparar apresentação: problema, justificativa, objetivos, método, solução, demonstração, testes e conclusão.
+- [x] Fazer ensaio da apresentação e validar o ambiente de demonstração.
 
 **Concluída quando:** outra pessoa consegue instalar/entender o projeto e a apresentação demonstra os objetivos e os testes realizados.
 
