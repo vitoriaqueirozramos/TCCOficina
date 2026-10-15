@@ -7,9 +7,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test",
+    "test": "node scripts/run-tests.js",
     "db:verify": "node scripts/verify-database.js",
     "db:test": "node scripts/check-database-constraints.js",
+    "db:migrate:os-items": "node scripts/migrate-os-item-removal.js",
     "auth:verify": "node scripts/check-auth-flow.js",
     "admin:create": "node scripts/create-admin.js"
   },
