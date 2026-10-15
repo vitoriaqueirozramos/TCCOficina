@@ -115,6 +115,7 @@ erDiagram
         string descricao_snapshot
         decimal quantidade
         decimal valor_unitario
+        datetime removida_em
     }
     OS_PECAS {
         int id_os_peca PK
@@ -123,6 +124,7 @@ erDiagram
         string descricao_snapshot
         int quantidade
         decimal valor_unitario
+        datetime removida_em
     }
     MOVIMENTOS_ESTOQUE {
         int id_movimento PK
@@ -152,7 +154,7 @@ erDiagram
 - **MECANICOS:** dados profissionais ligados a uma conta de usuário. A relação 1:1 permite que o mecânico use o sistema para consultar e atualizar OS atribuídas.
 - **SERVICOS / PECAS:** catálogo da oficina. Os preços atuais não substituem os valores históricos gravados nos itens da OS.
 - **STATUS_OS / ORDENS_SERVICO / HISTORICO_STATUS_OS:** status atual da OS e trilha das transições, com usuário e data da alteração.
-- **OS_SERVICOS / OS_PECAS:** entidades associativas que resolvem os relacionamentos muitos-para-muitos e guardam descrição e preço praticados no momento da OS.
+- **OS_SERVICOS / OS_PECAS:** entidades associativas que resolvem os relacionamentos muitos-para-muitos, guardam descrição/preço praticados e preservam itens removidos com `removida_em`.
 - **MOVIMENTOS_ESTOQUE:** livro de entradas e saídas. `quantidade_delta` é positiva para entrada e negativa para saída; o saldo pode ser obtido pela soma dos movimentos da peça. Uma saída ligada a `OS_PECAS` registra o consumo pela OS; ajustes e estornos podem não estar ligados a um item de OS.
 
 ## Cardinalidades principais

@@ -116,6 +116,7 @@ Carga inicial de referência: `ABERTA`, `EM_DIAGNOSTICO`, `AGUARDANDO_APROVACAO`
 - `descricao_snapshot VARCHAR(150)` — NN.
 - `quantidade DECIMAL(10,2)` — NN, CHECK `> 0`.
 - `valor_unitario DECIMAL(10,2)` — NN, CHECK `>= 0`.
+- `removida_em DATETIME` — NULL; marca remoção lógica sem apagar a linha do histórico.
 
 Índice: `(id_os)`. Snapshot mantém descrição e preço praticados na data da OS.
 
@@ -127,6 +128,7 @@ Carga inicial de referência: `ABERTA`, `EM_DIAGNOSTICO`, `AGUARDANDO_APROVACAO`
 - `descricao_snapshot VARCHAR(150)` — NN.
 - `quantidade INT UNSIGNED` — NN, CHECK `> 0`.
 - `valor_unitario DECIMAL(10,2)` — NN, CHECK `>= 0`.
+- `removida_em DATETIME` — NULL; marca remoção lógica sem apagar movimentos vinculados.
 - Chave candidata adicional `UQ (id_os_peca, id_peca)` para permitir FK composta de consistência em `movimentos_estoque`.
 
 Índice: `(id_os)`. A linha representa peça utilizada, não reserva futura.

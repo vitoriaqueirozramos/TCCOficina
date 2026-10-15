@@ -15,6 +15,8 @@
 
 O script cria o schema `oficinatech`; execute em uma instância de desenvolvimento limpa. Ele não é idempotente para tabelas: não o execute novamente sobre uma instalação existente. Para retestar do zero, use uma instância descartável sem o schema, preservando qualquer banco que contenha dados úteis.
 
+Para uma instalação existente, execute `npm run db:migrate:os-items` antes de atualizar a aplicação. O comando verifica as colunas antes de aplicar `database/migrations/001_os_item_removal.sql`, podendo ser executado novamente sem duplicar a migração. Ela adiciona marcadores de remoção lógica aos itens de serviço e peça, preservando movimentos históricos.
+
 ## Verificações após a execução
 
 Com `.env` configurado, execute `npm run db:verify` para conferir tabelas, view, perfis, status, FKs e restrições `CHECK`. Também é possível executar estas consultas no Workbench:
