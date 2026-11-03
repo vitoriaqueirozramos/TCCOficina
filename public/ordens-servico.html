@@ -47,7 +47,17 @@
       .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
       .mini-form { display: grid; gap: 12px; }
       .mini-form .inline-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      @media (max-width: 760px) { .grid, .detail-grid { grid-template-columns: 1fr; } .inline-fields { grid-template-columns: 1fr; } }
+      @media (max-width: 760px) {
+        .shell { max-width: 100%; padding: 22px 12px 32px; }
+        .topbar { align-items: flex-start; flex-direction: column; }
+        .nav-actions { width: 100%; max-width: 100%; overflow-x: auto; padding-bottom: 4px; }
+        .card { min-width: 0; padding: 16px; }
+        .grid, .detail-grid { grid-template-columns: minmax(0, 1fr); }
+        .panel { min-width: 0; }
+        .inline-fields, .mini-form .inline-fields { grid-template-columns: minmax(0, 1fr); }
+        .table-scroll { max-width: 100%; overflow-x: auto; }
+        .table-scroll table { min-width: 520px; }
+      }
     </style>
   </head>
   <body>
@@ -114,6 +124,7 @@
 
           <section class="panel" aria-labelledby="lista-title">
             <h2 id="lista-title">Ordens em aberto</h2>
+            <div class="table-scroll">
             <table>
               <thead>
                 <tr>
@@ -125,6 +136,7 @@
               </thead>
               <tbody id="ordens-body"></tbody>
             </table>
+            </div>
           </section>
         </div>
 
@@ -153,6 +165,7 @@
                 </label>
                 <button class="primary-button" type="submit">Atualizar status</button>
               </form>
+              <div class="table-scroll">
               <table>
                 <thead>
                   <tr>
@@ -163,6 +176,7 @@
                 </thead>
                 <tbody id="status-historico-body"></tbody>
               </table>
+              </div>
             </div>
 
             <div>
@@ -189,6 +203,7 @@
                 <button class="primary-button" type="submit">Adicionar serviço</button>
                 <button class="ghost-link" id="cancel-service-edit" type="button" hidden>Cancelar edição</button>
               </form>
+              <div class="table-scroll">
               <table>
                 <thead>
                   <tr>
@@ -200,6 +215,7 @@
                 </thead>
                 <tbody id="os-servicos-body"></tbody>
               </table>
+              </div>
             </div>
 
             <div>
@@ -226,6 +242,7 @@
                 <button class="primary-button" type="submit">Adicionar peça</button>
                 <button class="ghost-link" id="cancel-part-edit" type="button" hidden>Cancelar edição</button>
               </form>
+              <div class="table-scroll">
               <table>
                 <thead>
                   <tr>
@@ -237,6 +254,7 @@
                 </thead>
                 <tbody id="os-pecas-body"></tbody>
               </table>
+              </div>
             </div>
           </div>
         </section>

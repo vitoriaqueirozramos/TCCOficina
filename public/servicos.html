@@ -49,7 +49,16 @@
       .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 14px; }
       .pagination button { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); padding: 8px 12px; font: inherit; cursor: pointer; }
       .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
-      @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+      @media (max-width: 760px) {
+        .shell { max-width: 100%; padding: 22px 12px 32px; }
+        .topbar { align-items: flex-start; flex-direction: column; }
+        .nav-actions { width: 100%; max-width: 100%; overflow-x: auto; padding-bottom: 4px; }
+        .card { min-width: 0; padding: 16px; }
+        .grid { grid-template-columns: minmax(0, 1fr); }
+        .panel { min-width: 0; }
+        .table-scroll { max-width: 100%; overflow-x: auto; }
+        .table-scroll table { min-width: 560px; }
+      }
     </style>
   </head>
   <body>
@@ -108,6 +117,7 @@
             <h2 id="lista-title">Serviços cadastrados</h2>
             <label>Buscar serviço<input id="service-search" type="search" placeholder="Nome ou descrição"></label>
             <label>Situação<select id="service-active-filter"><option value="">Todas</option><option value="true">Ativos</option><option value="false">Inativos</option></select></label>
+            <div class="table-scroll">
             <table>
               <thead>
                 <tr>
@@ -119,6 +129,7 @@
               </thead>
               <tbody id="servicos-body"></tbody>
             </table>
+            </div>
             <div class="pagination"><button id="services-previous" type="button">Anterior</button><span id="services-page">Página 1 de 1</span><button id="services-next" type="button">Próxima</button></div>
           </section>
         </div>

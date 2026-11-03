@@ -2,6 +2,16 @@ const form = document.getElementById('estoque-form');
 const list = document.getElementById('estoque-list');
 const selectPeca = document.getElementById('id_peca');
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
+}
+
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
     credentials: 'same-origin',
@@ -22,7 +32,7 @@ async function loadParts() {
   const options = payload.pecas || [];
 
   selectPeca.innerHTML = '<option value="">Selecione</option>' + options.map((peca) => `
-    <option value="${peca.id_peca}">${peca.nome} (${peca.codigo})</option>
+    <option value="${escapeHtml(peca.id_peca)}">${escapeHtml(peca.nome)} (${escapeHtml(peca.codigo)})</option>
   `).join('');
 }
 
@@ -49,10 +59,10 @@ async function loadMovements() {
       <tbody>
         ${movimentos.map((mov) => `
           <tr>
-            <td>${mov.peca_nome || mov.id_peca}</td>
-            <td>${mov.motivo}</td>
-            <td>${mov.quantidade_delta}</td>
-            <td>${mov.registrado_por_nome}</td>
+            <td>${escapeHtml(mov.peca_nome || mov.id_peca)}</td>
+            <td>${escapeHtml(mov.motivo)}</td>
+            <td>${escapeHtml(mov.quantidade_delta)}</td>
+            <td>${escapeHtml(mov.registrado_por_nome)}</td>
             <td>${new Date(mov.criado_em).toLocaleString('pt-BR')}</td>
           </tr>
         `).join('')}

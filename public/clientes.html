@@ -168,8 +168,15 @@
       .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
 
       @media (max-width: 760px) {
-        .grid { grid-template-columns: 1fr; }
+        .shell { max-width: 100%; padding: 22px 12px 32px; }
+        .topbar { align-items: flex-start; flex-direction: column; }
+        .nav-actions { width: 100%; max-width: 100%; overflow-x: auto; padding-bottom: 4px; }
+        .card { min-width: 0; padding: 16px; }
+        .grid { grid-template-columns: minmax(0, 1fr); }
+        .panel { min-width: 0; }
         .inline-fields { grid-template-columns: 1fr; }
+        .table-scroll { max-width: 100%; overflow-x: auto; }
+        .table-scroll table { min-width: 620px; }
       }
     </style>
   </head>
@@ -233,6 +240,7 @@
               <input id="cliente-search" type="search" placeholder="Nome, documento, telefone ou e-mail">
             </label>
             <label>Situação<select id="customer-active-filter"><option value="">Todas</option><option value="true">Ativos</option><option value="false">Inativos</option></select></label>
+            <div class="table-scroll">
             <table>
               <thead>
                 <tr>
@@ -245,6 +253,7 @@
               </thead>
               <tbody id="clientes-body"></tbody>
             </table>
+            </div>
             <div class="pagination"><button id="customers-previous" type="button">Anterior</button><span id="customers-page">Página 1 de 1</span><button id="customers-next" type="button">Próxima</button></div>
           </section>
         </div>

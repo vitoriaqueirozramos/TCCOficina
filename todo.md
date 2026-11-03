@@ -222,7 +222,7 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Eliminar os conflitos de porta e timeouts intermitentes no `npm test`; runner isolado em porta efêmera validado com a suíte completa.
 - [x] Fazer teste manual dos principais fluxos por perfil.
 - [x] Verificar ausência de overflow horizontal na tela de login em 390, 778 e 1440 px.
-- [ ] Revalidar visualmente as telas de busca/edição após as alterações recentes (sessão autenticada do navegador indisponível nesta execução).
+- [x] Revalidar visualmente cadastros, OS e estoque em viewports móveis e desktop; confirmar paginação e edição de itens autenticados.
 - [x] Corrigir defeitos e repetir os testes afetados.
 
 **Concluída quando:** os fluxos críticos têm evidência de teste e não há defeitos bloqueadores conhecidos.
@@ -230,7 +230,7 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 ## Fase 13 — Segurança, documentação e entrega
 
 - [x] Revisar armazenamento de senhas, permissões, validações e consultas SQL parametrizadas.
-- [x] Escapar dados dinâmicos do banco antes de renderizar listas no dashboard e na tela de OS.
+- [x] Escapar dados dinâmicos do banco antes de renderizar listas no dashboard, OS e estoque.
 - [x] Remover segredos do código e confirmar que arquivos locais de ambiente não são versionados.
 - [x] Escrever instruções de instalação, configuração e execução no `README.md`.
 - [x] Documentar arquitetura, banco, requisitos, regras e principais fluxos.
