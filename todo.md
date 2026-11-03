@@ -221,6 +221,7 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Executar testes de integração com banco de desenvolvimento.
 - [x] Eliminar os conflitos de porta e timeouts intermitentes no `npm test`; runner isolado em porta efêmera validado com a suíte completa.
 - [x] Fazer teste manual dos principais fluxos por perfil.
+- [x] Verificar ausência de overflow horizontal na tela de login em 390, 778 e 1440 px.
 - [ ] Revalidar visualmente as telas de busca/edição após as alterações recentes (sessão autenticada do navegador indisponível nesta execução).
 - [x] Corrigir defeitos e repetir os testes afetados.
 

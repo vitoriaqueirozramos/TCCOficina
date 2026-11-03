@@ -549,7 +549,7 @@ a:focus-visible {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 854px) {
     .login-page {
       min-height: 100vh;
     }
@@ -668,7 +668,7 @@ a:focus-visible {
     }
   }
 
-  @media (min-width: 721px) {
+  @media (min-width: 855px) {
     .login-page {
       min-height: 100vh;
       background: var(--forest-deep);
