@@ -22,8 +22,11 @@ No ambiente local atual, `.env` usa a conta `root` informada para o bootstrap. A
 - Testes de integração: `npm test` (inicia a API automaticamente em uma porta efêmera e a encerra ao final).
 - Verificar schema e restrições do MySQL: `npm run db:verify` e `npm run db:test`.
 - Migrar uma instalação existente para remoção lógica de itens OS: `npm run db:migrate:os-items`.
+- Renomear rótulos antigos de mecânicos gerados por testes para nomes sintéticos de demonstração: `npm run db:rename-placeholder-mechanics`.
 - Verificar login com usuário temporário: `npm run auth:verify`.
 - Criar o primeiro administrador: `npm run admin:create -- "Nome" "email@oficina.com"` (a senha é digitada sem eco no terminal).
+- Criar uma conta de atendente: `npm run usuario:create -- ATENDENTE "Nome" "email@oficina.com"`.
+- Criar uma conta de mecânico: `npm run usuario:create -- MECANICO "Nome" "email@oficina.com" "Especialidade"` (a senha é digitada sem eco e o cadastro profissional é criado junto).
 
 Com o servidor iniciado, acesse o dashboard em `http://localhost:3000`.
 O formulário de acesso fica em `http://localhost:3000/login.html`. A API autentica com `POST /api/auth/login`, encerra o acesso com `POST /api/auth/logout` e retorna a conta atual em `GET /api/auth/me`.

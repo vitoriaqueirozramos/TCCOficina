@@ -34,7 +34,7 @@ async function createMechanicUser() {
   const [result] = await getPool().execute(
     `INSERT INTO usuarios (id_perfil, nome, email, senha_hash, ativo)
      VALUES (?, ?, ?, ?, TRUE)`,
-    [perfilRows[0].id_perfil, 'Mecânico Teste', email, '$2a$10$abcdefghijklmnopqrstuv']
+    [perfilRows[0].id_perfil, 'Bruno Carvalho', email, '$2a$10$abcdefghijklmnopqrstuv']
   );
 
   return result.insertId;

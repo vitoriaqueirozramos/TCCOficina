@@ -11,8 +11,10 @@
     "db:verify": "node scripts/verify-database.js",
     "db:test": "node scripts/check-database-constraints.js",
     "db:migrate:os-items": "node scripts/migrate-os-item-removal.js",
+    "db:rename-placeholder-mechanics": "node scripts/rename-legacy-mechanics.js",
     "auth:verify": "node scripts/check-auth-flow.js",
-    "admin:create": "node scripts/create-admin.js"
+    "admin:create": "node scripts/create-admin.js",
+    "usuario:create": "node scripts/create-profile-user.js"
   },
   "engines": {
     "node": ">=20.0.0"
