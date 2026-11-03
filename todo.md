@@ -229,6 +229,7 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 ## Fase 13 — Segurança, documentação e entrega
 
 - [x] Revisar armazenamento de senhas, permissões, validações e consultas SQL parametrizadas.
+- [x] Escapar dados dinâmicos do banco antes de renderizar listas no dashboard e na tela de OS.
 - [x] Remover segredos do código e confirmar que arquivos locais de ambiente não são versionados.
 - [x] Escrever instruções de instalação, configuração e execução no `README.md`.
 - [x] Documentar arquitetura, banco, requisitos, regras e principais fluxos.

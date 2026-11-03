@@ -14,6 +14,16 @@ const metricPecasAbaixoMinimo = document.querySelector('#metric-pecas-abaixo-min
 const recentOrdersList = document.querySelector('#recent-orders-list');
 const dataState = document.querySelector('.data-state');
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
+}
+
 async function hydrateAccountState() {
   if (!accountLink) {
     return;
@@ -117,11 +127,11 @@ async function refreshRecentOrders() {
           <article class="activity-item">
             <div>
               <span class="activity-tag">OS ${ordem.id_os}</span>
-              <strong>${ordem.cliente_nome}</strong>
+              <strong>${escapeHtml(ordem.cliente_nome)}</strong>
             </div>
             <div class="activity-meta">
-              <span>${ordem.veiculo_placa}</span>
-              <span>${ordem.status_nome}</span>
+              <span>${escapeHtml(ordem.veiculo_placa)}</span>
+              <span>${escapeHtml(ordem.status_nome)}</span>
             </div>
           </article>
         `).join('')}

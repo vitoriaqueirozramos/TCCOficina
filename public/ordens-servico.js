@@ -26,6 +26,16 @@ let editingPartItemId = null;
 let currentServices = [];
 let currentParts = [];
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
+}
+
 function setMessage(text, type = '') {
   messageBox.textContent = text;
   messageBox.className = `message ${type}`.trim();
@@ -48,7 +58,7 @@ async function loadClientesSelect() {
   }
 
   const { clientes } = await response.json();
-  clientesSelect.innerHTML = '<option value="">Selecione um cliente</option>' + clientes.map((cliente) => `<option value="${cliente.id_cliente}">${cliente.nome}</option>`).join('');
+  clientesSelect.innerHTML = '<option value="">Selecione um cliente</option>' + clientes.map((cliente) => `<option value="${escapeHtml(cliente.id_cliente)}">${escapeHtml(cliente.nome)}</option>`).join('');
 }
 
 async function loadVeiculosSelect() {
@@ -58,7 +68,7 @@ async function loadVeiculosSelect() {
   }
 
   const { veiculos } = await response.json();
-  veiculosSelect.innerHTML = '<option value="">Selecione um veículo</option>' + veiculos.map((veiculo) => `<option value="${veiculo.id_veiculo}">${veiculo.placa} - ${veiculo.marca} ${veiculo.modelo}</option>`).join('');
+  veiculosSelect.innerHTML = '<option value="">Selecione um veículo</option>' + veiculos.map((veiculo) => `<option value="${escapeHtml(veiculo.id_veiculo)}">${escapeHtml(`${veiculo.placa} - ${veiculo.marca} ${veiculo.modelo}`)}</option>`).join('');
 }
 
 async function loadMecanicosSelect() {
@@ -68,7 +78,7 @@ async function loadMecanicosSelect() {
   }
 
   const { mecanicos } = await response.json();
-  mecanicosSelect.innerHTML = '<option value="">Sem mecânico definido</option>' + mecanicos.map((mecanico) => `<option value="${mecanico.id_mecanico}">${mecanico.nome_usuario}</option>`).join('');
+  mecanicosSelect.innerHTML = '<option value="">Sem mecânico definido</option>' + mecanicos.map((mecanico) => `<option value="${escapeHtml(mecanico.id_mecanico)}">${escapeHtml(mecanico.nome_usuario)}</option>`).join('');
 }
 
 const STATUS_OPTIONS = [
@@ -103,7 +113,7 @@ async function loadOrdens() {
       return;
     }
 
-    orderDetailSelect.innerHTML = ordens.map((ordem) => `<option value="${ordem.id_os}">OS ${ordem.id_os} - ${ordem.cliente_nome}</option>`).join('');
+    orderDetailSelect.innerHTML = ordens.map((ordem) => `<option value="${escapeHtml(ordem.id_os)}">OS ${escapeHtml(ordem.id_os)} - ${escapeHtml(ordem.cliente_nome)}</option>`).join('');
 
     if (!selectedOrderId || !ordens.some((ordem) => String(ordem.id_os) === String(selectedOrderId))) {
       selectedOrderId = String(ordens[0].id_os);
@@ -118,16 +128,16 @@ async function loadOrdens() {
 
     body.innerHTML = ordens.map((ordem) => `
       <tr>
-        <td>${ordem.cliente_nome}</td>
-        <td>${ordem.veiculo_placa}</td>
-        <td>${ordem.status_nome}</td>
+        <td>${escapeHtml(ordem.cliente_nome)}</td>
+        <td>${escapeHtml(ordem.veiculo_placa)}</td>
+        <td>${escapeHtml(ordem.status_nome)}</td>
         <td>${currencyFormatter.format(Number(ordem.valor_total || 0))}</td>
       </tr>
     `).join('');
 
     await loadOrderDetails();
   } catch (error) {
-    body.innerHTML = `<tr><td colspan="3" class="empty-state">${error.message}</td></tr>`;
+    body.innerHTML = `<tr><td colspan="4" class="empty-state">${escapeHtml(error.message)}</td></tr>`;
   }
 }
 
@@ -139,7 +149,7 @@ async function loadServiceCatalog() {
 
   const { servicos } = await response.json();
   serviceCatalogSelect.innerHTML = '<option value="">Selecione um serviço</option>' + servicos.map((servico) => `
-    <option value="${servico.id_servico}" data-valor="${servico.preco_atual}">${servico.nome}</option>
+    <option value="${escapeHtml(servico.id_servico)}" data-valor="${escapeHtml(servico.preco_atual)}">${escapeHtml(servico.nome)}</option>
   `).join('');
 
   if (servicos.length) {
@@ -156,7 +166,7 @@ async function loadPartCatalog() {
 
   const { pecas } = await response.json();
   partCatalogSelect.innerHTML = '<option value="">Selecione uma peça</option>' + pecas.map((peca) => `
-    <option value="${peca.id_peca}" data-valor="${peca.preco_atual}">${peca.nome} (${peca.codigo})</option>
+    <option value="${escapeHtml(peca.id_peca)}" data-valor="${escapeHtml(peca.preco_atual)}">${escapeHtml(peca.nome)} (${escapeHtml(peca.codigo)})</option>
   `).join('');
 
   if (pecas.length) {
@@ -184,8 +194,8 @@ async function loadOrderStatusHistory() {
 
     statusHistoricoBody.innerHTML = historico.map((item) => `
       <tr>
-        <td>${item.status_novo_nome || 'Status'}</td>
-        <td>${item.alterado_por_nome || '-'}</td>
+        <td>${escapeHtml(item.status_novo_nome || 'Status')}</td>
+        <td>${escapeHtml(item.alterado_por_nome || '-')}</td>
         <td>${item.alterado_em ? new Date(item.alterado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '-'}</td>
       </tr>
     `).join('');
@@ -234,7 +244,7 @@ async function loadOrderDetails() {
   osServicosBody.innerHTML = servicos.length
     ? servicos.map((item) => `
         <tr>
-          <td>${item.servico_nome}</td>
+          <td>${escapeHtml(item.servico_nome)}</td>
           <td>${item.quantidade}</td>
           <td>${currencyFormatter.format(Number(item.valor_unitario || 0))}</td>
           <td>
@@ -250,7 +260,7 @@ async function loadOrderDetails() {
   osPecasBody.innerHTML = pecas.length
     ? pecas.map((item) => `
         <tr>
-          <td>${item.peca_nome}</td>
+          <td>${escapeHtml(item.peca_nome)}</td>
           <td>${item.quantidade}</td>
           <td>${currencyFormatter.format(Number(item.valor_unitario || 0))}</td>
           <td>
