@@ -63,7 +63,7 @@ async function seedCustomerVehicleAndMechanic() {
   const [mechanicUserResult] = await getPool().execute(
     `INSERT INTO usuarios (id_perfil, nome, email, senha_hash, ativo)
      VALUES (?, ?, ?, ?, TRUE)`,
-    [profileRows[0].id_perfil, 'Mecânico OS', `mecanicoos.${Date.now()}@example.com`, '$2a$10$abcdefghijklmnopqrstuv']
+    [profileRows[0].id_perfil, 'Rafael Almeida', `rafael.almeida.${Date.now()}@example.com`, '$2a$10$abcdefghijklmnopqrstuv']
   );
 
   const [mechanicResult] = await getPool().execute(

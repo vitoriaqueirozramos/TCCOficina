@@ -74,6 +74,30 @@ async function createOrder() {
   return orderPayload.ordem.id_os;
 }
 
+async function createMechanicForOrder(idOs) {
+  const [profileRows] = await getPool().execute(
+    'SELECT id_perfil FROM perfis WHERE nome = ? LIMIT 1',
+    ['MECANICO']
+  );
+  const [userResult] = await getPool().execute(
+    `INSERT INTO usuarios (id_perfil, nome, email, senha_hash, ativo)
+     VALUES (?, ?, ?, ?, TRUE)`,
+    [profileRows[0].id_perfil, 'Rafael Almeida', `rafael.almeida.${randomUUID().slice(0, 8)}@example.com`, '$2a$10$abcdefghijklmnopqrstuv']
+  );
+  const [mechanicResult] = await getPool().execute(
+    'INSERT INTO mecanicos (id_usuario, especialidade, ativo) VALUES (?, ?, TRUE)',
+    [userResult.insertId, 'Mecânica geral']
+  );
+  await getPool().execute('UPDATE ordens_servico SET id_mecanico = ? WHERE id_os = ?', [mechanicResult.insertId, idOs]);
+  return userResult.insertId;
+}
+
+function createUserCookie(idUsuario) {
+  const { getJwtSecret } = require('../src/config/auth');
+  const jwt = require('jsonwebtoken');
+  return 'oficinatech_token=' + jwt.sign({ sub: String(idUsuario) }, getJwtSecret(), { expiresIn: '15m', issuer: 'oficinatech' });
+}
+
 test('update order status and persist status history', async () => {
   const adminCookie = await getAdminCookie();
   const idOs = await createOrder();
@@ -96,6 +120,51 @@ test('update order status and persist status history', async () => {
   assert.equal(payload.ordem.id_os, idOs);
   assert.ok(Array.isArray(payload.historico), 'status history should be present');
   assert.ok(payload.historico.length >= 1, 'status history should contain at least one entry');
+});
+
+test('mechanic sees assigned orders and only updates allowed progress states', async () => {
+  const idAssignedOrder = await createOrder();
+  const idUnassignedOrder = await createOrder();
+  const mechanicUserId = await createMechanicForOrder(idAssignedOrder);
+  const mechanicCookie = createUserCookie(mechanicUserId);
+  const [diagnosticRows] = await getPool().execute(
+    'SELECT id_status_os FROM status_os WHERE codigo = ? LIMIT 1',
+    ['EM_DIAGNOSTICO']
+  );
+
+  const listResponse = await fetch(`${baseUrl}/api/ordens-servico/minhas`, {
+    headers: { Cookie: mechanicCookie }
+  });
+  const list = await listResponse.json();
+  assert.equal(listResponse.status, 200);
+  const assignedOrder = list.ordens.find((order) => order.id_os === idAssignedOrder);
+  assert.ok(assignedOrder);
+  assert.ok(assignedOrder.transicoes.some((status) => Number(status.id_status_os) === diagnosticRows[0].id_status_os));
+  assert.ok(!list.ordens.some((order) => order.id_os === idUnassignedOrder));
+  const progressResponse = await fetch(`${baseUrl}/api/ordens-servico/${idAssignedOrder}/meu-status`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', Cookie: mechanicCookie },
+    body: JSON.stringify({ id_status_os: diagnosticRows[0].id_status_os, observacao: 'Diagnóstico iniciado' })
+  });
+  assert.equal(progressResponse.status, 200);
+
+  const [cancelRows] = await getPool().execute(
+    'SELECT id_status_os FROM status_os WHERE codigo = ? LIMIT 1',
+    ['CANCELADA']
+  );
+  const forbiddenResponse = await fetch(`${baseUrl}/api/ordens-servico/${idAssignedOrder}/meu-status`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', Cookie: mechanicCookie },
+    body: JSON.stringify({ id_status_os: cancelRows[0].id_status_os })
+  });
+  assert.equal(forbiddenResponse.status, 409, 'mechanics cannot cancel an order through their progress endpoint');
+
+  const unassignedResponse = await fetch(`${baseUrl}/api/ordens-servico/${idUnassignedOrder}/meu-status`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', Cookie: mechanicCookie },
+    body: JSON.stringify({ id_status_os: diagnosticRows[0].id_status_os })
+  });
+  assert.equal(unassignedResponse.status, 403, 'mechanics cannot update an order assigned to someone else');
 });
 
 test('reject invalid status transitions and completion without items', async () => {

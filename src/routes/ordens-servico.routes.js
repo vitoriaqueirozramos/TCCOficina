@@ -26,6 +26,16 @@ function requireOrderAccess(request, response, next) {
   return next();
 }
 
+function requireMechanicProfile(request, response, next) {
+  if (!request.user) {
+    return response.status(401).json({ error: 'Autenticação necessária.' });
+  }
+  if (request.user.perfil !== 'MECANICO') {
+    return response.status(403).json({ error: 'Acesso exclusivo para mecânicos.' });
+  }
+  return next();
+}
+
 function toMysqlDateTime(value) {
   if (!value) {
     return null;
@@ -38,6 +48,113 @@ function toMysqlDateTime(value) {
 
   return parsed.toISOString().slice(0, 19).replace('T', ' ');
 }
+
+router.get('/minhas', authenticate, requireMechanicProfile, async (request, response, next) => {
+  try {
+    const [rows] = await getPool().execute(
+      `SELECT os.id_os,
+              c.nome AS cliente_nome,
+              v.placa AS veiculo_placa,
+              v.marca AS veiculo_marca,
+              v.modelo AS veiculo_modelo,
+              os.id_status_os,
+              status_os.codigo AS status_codigo,
+              status_os.nome AS status_nome,
+              os.aberta_em,
+              os.previsao_conclusao,
+              os.diagnostico,
+              os.observacoes
+       FROM ordens_servico AS os
+       JOIN mecanicos AS m ON m.id_mecanico = os.id_mecanico AND m.ativo = TRUE
+       JOIN clientes AS c ON c.id_cliente = os.id_cliente
+       JOIN veiculos AS v ON v.id_veiculo = os.id_veiculo
+       JOIN status_os ON status_os.id_status_os = os.id_status_os
+       WHERE m.id_usuario = ?
+         AND status_os.codigo NOT IN ('CONCLUIDA', 'CANCELADA')
+       ORDER BY os.previsao_conclusao IS NULL, os.previsao_conclusao ASC, os.aberta_em ASC`,
+      [request.user.id_usuario]
+    );
+
+    const [statusRows] = await getPool().execute(
+      `SELECT id_status_os, codigo, nome FROM status_os
+       WHERE codigo IN ('EM_DIAGNOSTICO', 'AGUARDANDO_PECAS', 'EM_EXECUCAO')`
+    );
+    const statusesByCode = new Map(statusRows.map((status) => [status.codigo, status]));
+    const ordens = rows.map((ordem) => ({
+      ...ordem,
+      transicoes: (STATUS_TRANSITIONS[ordem.status_codigo] || [])
+        .filter((codigo) => statusesByCode.has(codigo))
+        .map((codigo) => {
+          const status = statusesByCode.get(codigo);
+          return { id_status_os: status.id_status_os, codigo: status.codigo, nome: status.nome };
+        })
+    }));
+    return response.json({ ordens });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post('/:id_os/meu-status', authenticate, requireMechanicProfile, async (request, response, next) => {
+  let connection;
+  try {
+    const idOs = Number(request.params.id_os);
+    const novoStatusId = Number(request.body?.id_status_os);
+    const observacao = typeof request.body?.observacao === 'string' ? request.body.observacao.trim() : null;
+    if (!Number.isInteger(idOs) || idOs <= 0 || !Number.isInteger(novoStatusId) || novoStatusId <= 0) {
+      return response.status(400).json({ error: 'Informe uma ordem e um status válidos.' });
+    }
+
+    connection = await getPool().getConnection();
+    await connection.beginTransaction();
+    const [orderRows] = await connection.execute(
+      `SELECT os.id_status_os, status_os.codigo AS status_codigo, m.id_usuario AS mecanico_usuario_id
+       FROM ordens_servico AS os
+       JOIN status_os ON status_os.id_status_os = os.id_status_os
+       LEFT JOIN mecanicos AS m ON m.id_mecanico = os.id_mecanico
+       WHERE os.id_os = ? LIMIT 1 FOR UPDATE`,
+      [idOs]
+    );
+    if (orderRows.length === 0) {
+      await connection.rollback();
+      return response.status(404).json({ error: 'Ordem de serviço não encontrada.' });
+    }
+    if (Number(orderRows[0].mecanico_usuario_id) !== Number(request.user.id_usuario)) {
+      await connection.rollback();
+      return response.status(403).json({ error: 'Esta ordem não está atribuída a este mecânico.' });
+    }
+
+    const [targetRows] = await connection.execute(
+      'SELECT id_status_os, codigo, nome FROM status_os WHERE id_status_os = ? LIMIT 1',
+      [novoStatusId]
+    );
+    if (targetRows.length === 0) {
+      await connection.rollback();
+      return response.status(404).json({ error: 'Status não encontrado.' });
+    }
+    const currentCode = orderRows[0].status_codigo;
+    const targetCode = targetRows[0].codigo;
+    const mechanicStatuses = ['EM_DIAGNOSTICO', 'AGUARDANDO_PECAS', 'EM_EXECUCAO'];
+    if (!mechanicStatuses.includes(targetCode) || !(STATUS_TRANSITIONS[currentCode] || []).includes(targetCode)) {
+      await connection.rollback();
+      return response.status(409).json({ error: 'Transição não permitida para o perfil de mecânico.' });
+    }
+
+    await connection.execute('UPDATE ordens_servico SET id_status_os = ? WHERE id_os = ?', [novoStatusId, idOs]);
+    await connection.execute(
+      `INSERT INTO historico_status_os (id_os, id_status_anterior, id_status_novo, alterado_por, observacao)
+       VALUES (?, ?, ?, ?, ?)`,
+      [idOs, orderRows[0].id_status_os, novoStatusId, request.user.id_usuario, observacao || null]
+    );
+    await connection.commit();
+    return response.json({ ordem: { id_os: idOs, id_status_os: novoStatusId, status_codigo: targetCode, status_nome: targetRows[0].nome } });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    return next(error);
+  } finally {
+    connection?.release();
+  }
+});
 
 router.use(authenticate, requireOrderAccess);
 
