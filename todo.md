@@ -219,7 +219,7 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Testar conclusão bem-sucedida e concorrência simultânea de consumo de estoque.
 - [x] Testar pesquisa, filtros, histórico e dashboard.
 - [x] Executar testes de integração com banco de desenvolvimento.
-- [ ] Eliminar os timeouts intermitentes de conexão local observados no `npm test` e repetir até obter execução estável.
+- [x] Eliminar os conflitos de porta e timeouts intermitentes no `npm test`; runner isolado em porta efêmera validado com a suíte completa.
 - [x] Fazer teste manual dos principais fluxos por perfil.
 - [ ] Revalidar visualmente as telas de busca/edição após as alterações recentes (sessão autenticada do navegador indisponível nesta execução).
 - [x] Corrigir defeitos e repetir os testes afetados.

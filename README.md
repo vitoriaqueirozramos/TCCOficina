@@ -19,7 +19,7 @@ No ambiente local atual, `.env` usa a conta `root` informada para o bootstrap. A
 
 - Desenvolvimento com reinício automático: `npm run dev`.
 - Execução normal: `npm start`.
-- Testes de integração: `npm test` (inicia a API automaticamente na porta 3000 e a encerra ao final).
+- Testes de integração: `npm test` (inicia a API automaticamente em uma porta efêmera e a encerra ao final).
 - Verificar schema e restrições do MySQL: `npm run db:verify` e `npm run db:test`.
 - Migrar uma instalação existente para remoção lógica de itens OS: `npm run db:migrate:os-items`.
 - Verificar login com usuário temporário: `npm run auth:verify`.

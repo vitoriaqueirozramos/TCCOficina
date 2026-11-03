@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { getPool } = require('../src/config/database');
 
-const baseUrl = 'http://127.0.0.1:3000';
+const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 
 async function getAdminCookie() {
   const { getJwtSecret } = require('../src/config/auth');
@@ -59,6 +59,7 @@ test('list customers with admin session', async () => {
 
 test('get, update, search and archive a customer without deleting it', async () => {
   const adminCookie = await getAdminCookie();
+  const updatedName = `Cliente atualizado ${Date.now()}`;
   const createResponse = await fetch(`${baseUrl}/api/clientes`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
@@ -77,7 +78,7 @@ test('get, update, search and archive a customer without deleting it', async () 
     method: 'PUT',
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
     body: JSON.stringify({
-      nome: 'Cliente atualizado',
+      nome: updatedName,
       documento: created.cliente.documento,
       telefone: '(11) 91111-1111',
       email: created.cliente.email,
@@ -86,9 +87,9 @@ test('get, update, search and archive a customer without deleting it', async () 
   });
   const updated = await updateResponse.json();
   assert.equal(updateResponse.status, 200);
-  assert.equal(updated.cliente.nome, 'Cliente atualizado');
+  assert.equal(updated.cliente.nome, updatedName);
 
-  const searchResponse = await fetch(`${baseUrl}/api/clientes?q=${encodeURIComponent('Cliente atualizado')}`, {
+  const searchResponse = await fetch(`${baseUrl}/api/clientes?q=${encodeURIComponent(updatedName)}`, {
     headers: { Cookie: adminCookie }
   });
   const searched = await searchResponse.json();

@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { getPool } = require('../src/config/database');
 
-const baseUrl = 'http://127.0.0.1:3000';
+const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 
 async function getAdminCookie() {
   const { getJwtSecret } = require('../src/config/auth');
@@ -78,6 +78,7 @@ test('list mechanics with admin session', async () => {
 test('get, update, search and synchronize mechanic account status', async () => {
   const adminCookie = await getAdminCookie();
   const idUsuario = await createMechanicUser();
+  const updatedSpecialty = `Freios ABS ${Date.now()}`;
   const createResponse = await fetch(`${baseUrl}/api/mecanicos`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
@@ -89,17 +90,17 @@ test('get, update, search and synchronize mechanic account status', async () => 
   const updateResponse = await fetch(`${baseUrl}/api/mecanicos/${created.mecanico.id_mecanico}`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
-    body: JSON.stringify({ especialidade: 'Freios ABS', ativo: false })
+    body: JSON.stringify({ especialidade: updatedSpecialty, ativo: false })
   });
   const updated = await updateResponse.json();
   assert.equal(updateResponse.status, 200);
-  assert.equal(updated.mecanico.especialidade, 'Freios ABS');
+  assert.equal(updated.mecanico.especialidade, updatedSpecialty);
   assert.equal(updated.mecanico.ativo, 0);
 
   const [userRows] = await getPool().execute('SELECT ativo FROM usuarios WHERE id_usuario = ?', [idUsuario]);
   assert.equal(userRows[0].ativo, 0, 'inactivating the mechanic should deactivate the linked account');
 
-  const searchResponse = await fetch(`${baseUrl}/api/mecanicos?q=Freios%20ABS`, {
+  const searchResponse = await fetch(`${baseUrl}/api/mecanicos?q=${encodeURIComponent(updatedSpecialty)}`, {
     headers: { Cookie: adminCookie }
   });
   const searched = await searchResponse.json();

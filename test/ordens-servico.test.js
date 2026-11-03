@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { getPool } = require('../src/config/database');
 
-const baseUrl = 'http://127.0.0.1:3000';
+const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 
 async function getAdminCookie() {
   const { getJwtSecret } = require('../src/config/auth');

@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { getPool } = require('../src/config/database');
 
-const baseUrl = 'http://127.0.0.1:3000';
+const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 
 async function getAdminCookie() {
   const { getJwtSecret } = require('../src/config/auth');
@@ -60,6 +60,7 @@ test('list parts with admin session', async () => {
 
 test('get, update, search and archive a part', async () => {
   const adminCookie = await getAdminCookie();
+  const updatedName = `Peça atualizada ${Date.now()}`;
   const createResponse = await fetch(`${baseUrl}/api/pecas`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
@@ -79,7 +80,7 @@ test('get, update, search and archive a part', async () => {
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
     body: JSON.stringify({
       codigo: created.peca.codigo,
-      nome: 'Peça atualizada',
+      nome: updatedName,
       descricao: 'Atualizada',
       preco_atual: 17.5,
       estoque_minimo: 4
@@ -87,9 +88,9 @@ test('get, update, search and archive a part', async () => {
   });
   const updated = await updateResponse.json();
   assert.equal(updateResponse.status, 200);
-  assert.equal(updated.peca.nome, 'Peça atualizada');
+  assert.equal(updated.peca.nome, updatedName);
 
-  const searchResponse = await fetch(`${baseUrl}/api/pecas?q=Pe%C3%A7a%20atualizada`, {
+  const searchResponse = await fetch(`${baseUrl}/api/pecas?q=${encodeURIComponent(updatedName)}`, {
     headers: { Cookie: adminCookie }
   });
   const searched = await searchResponse.json();

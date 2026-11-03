@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { getPool } = require('../src/config/database');
 
-const baseUrl = 'http://127.0.0.1:3000';
+const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 
 async function getAdminCookie() {
   const { getJwtSecret } = require('../src/config/auth');
@@ -86,6 +86,7 @@ test('list vehicles with admin session', async () => {
 test('get, update, search and archive a vehicle', async () => {
   const adminCookie = await getAdminCookie();
   const idCliente = await createCustomer(adminCookie);
+  const updatedModel = `Civic Touring ${Date.now()}`;
   const createResponse = await fetch(`${baseUrl}/api/veiculos`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
@@ -110,16 +111,16 @@ test('get, update, search and archive a vehicle', async () => {
       placa: created.veiculo.placa,
       chassi: created.veiculo.chassi,
       marca: 'Honda',
-      modelo: 'Civic Touring',
+      modelo: updatedModel,
       ano: 2023,
       cor: 'Preto'
     })
   });
   const updated = await updateResponse.json();
   assert.equal(updateResponse.status, 200);
-  assert.equal(updated.veiculo.modelo, 'Civic Touring');
+  assert.equal(updated.veiculo.modelo, updatedModel);
 
-  const searchResponse = await fetch(`${baseUrl}/api/veiculos?q=Civic%20Touring`, {
+  const searchResponse = await fetch(`${baseUrl}/api/veiculos?q=${encodeURIComponent(updatedModel)}`, {
     headers: { Cookie: adminCookie }
   });
   const searched = await searchResponse.json();

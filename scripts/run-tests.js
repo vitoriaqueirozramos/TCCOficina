@@ -3,7 +3,7 @@ const path = require('node:path');
 
 const projectRoot = path.resolve(__dirname, '..');
 const nodePath = process.execPath;
-const childEnvironment = { ...process.env, PORT: '3000' };
+const childEnvironment = { ...process.env, PORT: '0' };
 const server = spawn(nodePath, ['src/server.js'], {
   cwd: projectRoot,
   env: childEnvironment,
@@ -29,7 +29,7 @@ function finish(exitCode) {
   process.exitCode = exitCode;
 }
 
-function runTests() {
+function runTests(port) {
   testProcess = spawn(nodePath, [
     '--test',
     '--test-force-exit',
@@ -39,7 +39,7 @@ function runTests() {
       ...process.argv.slice(2)
   ], {
     cwd: projectRoot,
-    env: childEnvironment,
+    env: { ...childEnvironment, TEST_BASE_URL: `http://127.0.0.1:${port}` },
     stdio: 'inherit'
   });
   testProcess.on('error', () => finish(1));
@@ -49,10 +49,11 @@ function runTests() {
 server.stdout.on('data', (chunk) => {
   process.stdout.write(chunk);
   serverOutput += chunk.toString();
-  if (!serverReady && serverOutput.includes('listening on port 3000')) {
+  const listenMessage = serverOutput.match(/listening on port (\d+)/);
+  if (!serverReady && listenMessage) {
     serverReady = true;
     clearTimeout(startupTimeout);
-    runTests();
+    runTests(Number(listenMessage[1]));
   }
 });
 

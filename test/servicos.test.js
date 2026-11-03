@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { getPool } = require('../src/config/database');
 
-const baseUrl = 'http://127.0.0.1:3000';
+const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 
 async function getAdminCookie() {
   const { getJwtSecret } = require('../src/config/auth');
@@ -58,6 +58,7 @@ test('list services with admin session', async () => {
 
 test('get, update, search and archive a service', async () => {
   const adminCookie = await getAdminCookie();
+  const updatedName = `Serviço atualizado ${Date.now()}`;
   const createResponse = await fetch(`${baseUrl}/api/servicos`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
@@ -69,13 +70,13 @@ test('get, update, search and archive a service', async () => {
   const updateResponse = await fetch(`${baseUrl}/api/servicos/${created.servico.id_servico}`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
-    body: JSON.stringify({ nome: 'Serviço Atualizado', descricao: 'Atualizada', preco_atual: 35.5 })
+    body: JSON.stringify({ nome: updatedName, descricao: 'Atualizada', preco_atual: 35.5 })
   });
   const updated = await updateResponse.json();
   assert.equal(updateResponse.status, 200);
   assert.equal(Number(updated.servico.preco_atual), 35.5);
 
-  const searchResponse = await fetch(`${baseUrl}/api/servicos?q=Servi%C3%A7o%20Atualizado`, {
+  const searchResponse = await fetch(`${baseUrl}/api/servicos?q=${encodeURIComponent(updatedName)}`, {
     headers: { Cookie: adminCookie }
   });
   const searched = await searchResponse.json();
