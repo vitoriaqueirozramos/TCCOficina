@@ -36,6 +36,10 @@ async function hydrateAccountState() {
     }
 
     const { user } = await response.json();
+    if (user?.perfil === 'MECANICO') {
+      window.location.replace('/mecanico.html');
+      return;
+    }
     const firstName = user?.nome?.split(' ')[0] || 'Conta';
     accountLink.textContent = `${firstName} · Sair`;
     accountLink.setAttribute('aria-label', `Sair da conta de ${user.nome}`);

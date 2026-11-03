@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#123a2f">
+    <title>Minhas OS | OFICINATECH</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+      .mechanic-orders { display: grid; gap: 12px; }
+      .mechanic-order { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 280px); gap: 20px; padding: 18px 0; border-top: 1px solid var(--line); }
+      .mechanic-order h3 { margin: 0 0 8px; font-size: 19px; }
+      .mechanic-order p { margin: 4px 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .mechanic-order strong { color: var(--ink); }
+      .mechanic-status { display: inline-flex; margin-bottom: 8px; padding: 5px 8px; border-radius: 3px; color: var(--forest-deep); background: var(--soft-green); font-size: 9px; font-weight: 700; }
+      .mechanic-update { display: grid; align-content: start; gap: 10px; }
+      .mechanic-update label { display: grid; gap: 6px; color: var(--muted); font-size: 10px; }
+      .mechanic-update select, .mechanic-update input { width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); font: inherit; }
+      .mechanic-update button { min-height: 38px; border: 0; border-radius: 4px; padding: 0 12px; color: #fff; background: var(--forest); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+      .mechanic-message { min-height: 20px; margin: 0 0 12px; color: var(--red); font-size: 11px; }
+      .mechanic-message.success { color: var(--forest); }
+      @media (max-width: 720px) {
+        .mechanic-order { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      }
+    </style>
+    <script src="/mecanico.js" defer></script>
+  </head>
+  <body>
+    <div class="application-shell">
+      <aside class="sidebar" aria-label="Navegação principal">
+        <a class="brand" href="/mecanico.html" aria-label="OFICINATECH, minhas ordens">
+          <span class="brand-mark" aria-hidden="true">O</span>
+          <span class="brand-copy">
+            <strong>OFICINA<span>TECH</span></strong>
+            <small>ÁREA DO MECÂNICO</small>
+          </span>
+        </a>
+        <nav class="navigation">
+          <p class="navigation-label">TRABALHO</p>
+          <a class="navigation-link is-active" href="/mecanico.html" aria-current="page">Minhas OS</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <p class="breadcrumb">OFICINATECH <span>/</span> MINHAS OS</p>
+          <a class="account-link" id="account-link" href="#">Mecânico · Sair</a>
+        </header>
+
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">ÁREA DO MECÂNICO</p>
+            <h1>Minhas ordens</h1>
+            <p class="page-description">Ordens atribuídas a você e atualizações de andamento permitidas.</p>
+          </div>
+          <button class="refresh-button" id="refresh-orders" type="button"><span aria-hidden="true">↻</span> Atualizar</button>
+        </section>
+
+        <p id="mechanic-message" class="mechanic-message" role="status" aria-live="polite"></p>
+        <section class="activity-section" aria-labelledby="assigned-orders-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">ACOMPANHAMENTO</p>
+              <h2 id="assigned-orders-title">Ordens atribuídas</h2>
+            </div>
+            <span id="orders-count" class="activity-period">CARREGANDO</span>
+          </div>
+          <div id="assigned-orders" class="mechanic-orders" aria-live="polite"></div>
+        </section>
+
+        <footer class="page-footer">
+          <span>OFICINATECH</span>
+          <span>GERENCIAMENTO DE OFICINA MECÂNICA</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

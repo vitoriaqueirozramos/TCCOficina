@@ -122,6 +122,7 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Testar a interface em navegadores modernos e em larguras de tela comuns.
 - [x] Validar o dashboard no Chromium em 1440 px e 390 px, sem overflow horizontal.
 - [x] Testar em outros navegadores modernos.
+- [x] Criar uma área de trabalho do mecânico para OS atribuídas, sem expor módulos administrativos.
 
 **Concluída quando:** fluxos principais podem ser percorridos sem inconsistência visual ou bloqueios de uso.
 
@@ -134,6 +135,9 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Validar entrada, limitar tentativas e revalidar no banco se a conta permanece ativa.
 - [x] Testar acesso anônimo, perfil permitido/negado, senha incorreta/correta e conta inativada.
 - [x] Criar o primeiro administrador com `npm run admin:create -- "Nome" "email@oficina.com"`.
+- [x] Provisionar contas de ATENDENTE e MECANICO por comando seguro, com senha não exibida.
+- [x] Direcionar mecânicos autenticados à área `Minhas OS` e restringir leitura/avanço de status às OS atribuídas.
+- [x] Integrar o perfil ATENDENTE aos fluxos de clientes, veículos, OS e dashboard.
 - [x] Configurar `JWT_SECRET` persistente e aleatório nos ambientes de produção.
 
 **Concluída quando:** autenticação e permissões foram verificadas no servidor para os fluxos e perfis definidos.
@@ -213,6 +217,9 @@ Sistema Web de Gerenciamento de Oficina Mecânica
 - [x] Testar consulta, edição, busca e arquivamento/reativação de veículos.
 - [x] Testar consulta, edição, busca e arquivamento/reativação de serviços e peças.
 - [x] Testar edição, busca e sincronização de ativação do mecânico com sua conta.
+- [x] Testar permissões do ATENDENTE e isolamento/avanço permitido de OS no perfil MECANICO.
+- [x] Validar visualmente a área `Minhas OS` e o formulário de andamento do mecânico.
+- [x] Atualizar fixtures e dados locais de teste que exibiam nomes-placeholder de mecânicos para nomes sintéticos de demonstração.
 - [x] Testar operações de edição, busca e arquivamento dos cadastros implementados.
 - [x] Testar edição/remoção lógica de itens OS, recálculo do total e estorno do estoque.
 - [x] Testar estoque, proteção contra saldo negativo, cancelamento e estorno de OS.

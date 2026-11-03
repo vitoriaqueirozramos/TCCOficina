@@ -25,7 +25,7 @@ loginForm.addEventListener('submit', async (event) => {
       return;
     }
 
-    window.location.assign('/');
+    window.location.assign(result.user?.perfil === 'MECANICO' ? '/mecanico.html' : '/');
   } catch {
     loginMessage.textContent = 'Não foi possível conectar ao servidor.';
   } finally {
