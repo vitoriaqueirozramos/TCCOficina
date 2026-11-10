@@ -16,8 +16,8 @@ function paginationMetadata(page, limit, total) {
 }
 
 function parseActiveFilter(value) {
-  if (value === undefined || value === '') return null;
-  if (value === 'true') return 1;
+  if (value === undefined || value === 'true') return 1;
+  if (value === '' || value === 'all') return null;
   if (value === 'false') return 0;
   return Number.NaN;
 }
