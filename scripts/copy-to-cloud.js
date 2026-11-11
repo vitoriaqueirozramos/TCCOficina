@@ -20,10 +20,10 @@ function readEnv(file) {
   return dotenv.parse(fs.readFileSync(full));
 }
 
-function connect(env, ssl) {
+function connect(env, ssl, useDatabase = true) {
   return mysql.createConnection({
     host: env.DB_HOST, port: Number(env.DB_PORT || 3306), user: env.DB_USER,
-    password: env.DB_PASSWORD || '', database: env.DB_NAME, dateStrings: true,
+    password: env.DB_PASSWORD || '', database: useDatabase ? env.DB_NAME : undefined, dateStrings: true, connectTimeout: 30000,
     ...(ssl ? { ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true } } : {})
   });
 }
@@ -32,13 +32,21 @@ function connect(env, ssl) {
   const apply = process.argv.includes('--apply');
   const localEnv = readEnv('.env');
   const cloudEnv = readEnv('.env.tidb');
+  // CLOUD_DB_NAME permite copiar para um banco de ensaio no mesmo servidor antes do definitivo.
+  if (process.env.CLOUD_DB_NAME) cloudEnv.DB_NAME = process.env.CLOUD_DB_NAME;
   const local = await connect(localEnv, false);
-  const cloud = await connect(cloudEnv, !/^(0|false)$/i.test(cloudEnv.DB_SSL || 'true'));
+  const cloud = await connect(cloudEnv, !/^(0|false)$/i.test(cloudEnv.DB_SSL || 'true'), false);
+  const [found] = await cloud.query('SHOW DATABASES LIKE ?', [cloudEnv.DB_NAME]);
+  if (!found.length) {
+    if (!apply) console.log('O banco ' + cloudEnv.DB_NAME + ' ainda não existe no destino; será criado com --apply.');
+    else await cloud.query('CREATE DATABASE `' + cloudEnv.DB_NAME + '` CHARACTER SET utf8mb4');
+  }
+  if (found.length || apply) await cloud.query('USE `' + cloudEnv.DB_NAME + '`');
 
   const [[version]] = await cloud.query('SELECT VERSION() AS v');
   console.log(`Conectado ao destino: ${version.v} (banco ${cloudEnv.DB_NAME})`);
 
-  const [existing] = await cloud.query('SHOW FULL TABLES');
+  const [existing] = found.length || apply ? await cloud.query('SHOW FULL TABLES') : [[]];
   if (existing.length) {
     throw new Error(`O banco de destino já tem ${existing.length} tabela(s)/view(s). Use um banco vazio; nada foi alterado.`);
   }
@@ -60,7 +68,19 @@ function connect(env, ssl) {
 
   for (const table of TABLES) {
     const [[ddl]] = await local.query(`SHOW CREATE TABLE \`${table}\``);
-    await cloud.query(ddl['Create Table']);
+    // RESTRICT já é o comportamento padrão; o TiDB recusa CHECK em coluna de chave estrangeira com ação explícita.
+    const createSql = ddl['Create Table'].replace(/ ON (DELETE|UPDATE) RESTRICT/g, '');
+    try {
+      await cloud.query(createSql);
+    } catch (error) {
+      if (!/check constraint/i.test(error.message)) throw error;
+      const semCheck = createSql.split('\n').filter((line) => {
+        const check = line.match(/^\s*CONSTRAINT `([^`]+)` CHECK /);
+        if (check) console.log(`Aviso: ${table} criada sem a restrição CHECK ${check[1]} (não aceita pelo destino; a aplicação valida a regra).`);
+        return !check;
+      }).join('\n').replace(/,(\s*\n\))/, '$1');
+      await cloud.query(semCheck);
+    }
     const [rows] = await local.query(`SELECT * FROM \`${table}\``);
     for (let i = 0; i < rows.length; i += 200) {
       const chunk = rows.slice(i, i + 200);

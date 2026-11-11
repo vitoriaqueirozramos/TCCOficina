@@ -17,7 +17,8 @@
     "usuario:create": "node scripts/create-profile-user.js",
     "db:migrate:estoque": "node scripts/migrate-catalogo-estoque.js",
     "db:organize-demo": "node scripts/organize-demo-data.js",
-    "db:audit": "node scripts/audit-demo-data.js"
+    "db:audit": "node scripts/audit-demo-data.js",
+    "db:copy-cloud": "node scripts/copy-to-cloud.js"
   },
   "engines": {
     "node": ">=20.0.0"

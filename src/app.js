@@ -17,6 +17,9 @@ const ordensServicoRoutes = require('./routes/ordens-servico.routes');
 const app = express();
 
 app.disable('x-powered-by');
+if (process.env.VERCEL) {
+  app.set('trust proxy', 1);
+}
 app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
