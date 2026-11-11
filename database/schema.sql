@@ -82,6 +82,7 @@ CREATE TABLE servicos (
   nome VARCHAR(120) NOT NULL,
   descricao TEXT NULL,
   preco_atual DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  duracao_minutos SMALLINT UNSIGNED NULL,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY (id_servico),
   CONSTRAINT chk_servicos_preco CHECK (preco_atual >= 0)
@@ -92,12 +93,16 @@ CREATE TABLE pecas (
   codigo VARCHAR(40) NOT NULL,
   nome VARCHAR(120) NOT NULL,
   descricao TEXT NULL,
+  categoria VARCHAR(40) NOT NULL DEFAULT 'Geral',
+  unidade VARCHAR(10) NOT NULL DEFAULT 'UN',
+  preco_custo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   preco_atual DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   estoque_minimo INT UNSIGNED NOT NULL DEFAULT 0,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
   PRIMARY KEY (id_peca),
   CONSTRAINT uq_pecas_codigo UNIQUE (codigo),
-  CONSTRAINT chk_pecas_preco CHECK (preco_atual >= 0)
+  CONSTRAINT chk_pecas_preco CHECK (preco_atual >= 0),
+  CONSTRAINT chk_pecas_custo CHECK (preco_custo >= 0)
 ) ENGINE=InnoDB;
 
 CREATE TABLE status_os (
@@ -195,6 +200,7 @@ CREATE TABLE movimentos_estoque (
   registrado_por INT UNSIGNED NOT NULL,
   quantidade_delta INT NOT NULL,
   motivo VARCHAR(20) NOT NULL,
+  justificativa VARCHAR(60) NULL,
   criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   observacao VARCHAR(255) NULL,
   PRIMARY KEY (id_movimento),
@@ -204,6 +210,7 @@ CREATE TABLE movimentos_estoque (
   CONSTRAINT chk_movimentos_delta CHECK (quantidade_delta <> 0),
   CONSTRAINT chk_movimentos_motivo CHECK (
     (motivo = 'ENTRADA' AND quantidade_delta > 0 AND id_os_peca IS NULL)
+    OR (motivo = 'SAIDA' AND quantidade_delta < 0 AND id_os_peca IS NULL)
     OR (motivo = 'CONSUMO_OS' AND quantidade_delta < 0 AND id_os_peca IS NOT NULL)
     OR (motivo = 'AJUSTE' AND quantidade_delta <> 0)
     OR (motivo = 'ESTORNO' AND id_os_peca IS NOT NULL AND quantidade_delta <> 0)
@@ -261,14 +268,24 @@ INSERT IGNORE INTO status_os (codigo, nome) VALUES
   ('CONCLUIDA', 'Concluída'),
   ('CANCELADA', 'Cancelada');
 
-CREATE OR REPLACE VIEW vw_saldo_estoque AS
+CREATE OR REPLACE SQL SECURITY INVOKER VIEW vw_saldo_estoque AS
 SELECT
   p.id_peca,
   p.codigo,
   p.nome,
   p.estoque_minimo,
   p.ativo,
-  COALESCE(SUM(m.quantidade_delta), 0) AS saldo_atual
+  COALESCE(SUM(m.quantidade_delta), 0) AS saldo_atual,
+  p.categoria,
+  p.unidade,
+  p.preco_custo,
+  p.preco_atual,
+  CASE
+    WHEN COALESCE(SUM(m.quantidade_delta), 0) <= 0 THEN 'SEM_ESTOQUE'
+    WHEN COALESCE(SUM(m.quantidade_delta), 0) < p.estoque_minimo THEN 'BAIXO'
+    ELSE 'DISPONIVEL'
+  END AS situacao
 FROM pecas AS p
 LEFT JOIN movimentos_estoque AS m ON m.id_peca = p.id_peca
-GROUP BY p.id_peca, p.codigo, p.nome, p.estoque_minimo, p.ativo;
+GROUP BY p.id_peca, p.codigo, p.nome, p.estoque_minimo, p.ativo,
+         p.categoria, p.unidade, p.preco_custo, p.preco_atual;

@@ -14,7 +14,10 @@
     "db:rename-placeholder-mechanics": "node scripts/rename-legacy-mechanics.js",
     "auth:verify": "node scripts/check-auth-flow.js",
     "admin:create": "node scripts/create-admin.js",
-    "usuario:create": "node scripts/create-profile-user.js"
+    "usuario:create": "node scripts/create-profile-user.js",
+    "db:migrate:estoque": "node scripts/migrate-catalogo-estoque.js",
+    "db:organize-demo": "node scripts/organize-demo-data.js",
+    "db:audit": "node scripts/audit-demo-data.js"
   },
   "engines": {
     "node": ">=20.0.0"

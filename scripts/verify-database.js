@@ -33,7 +33,7 @@ async function main() {
       },
       {
         label: 'restrições CHECK',
-        expected: 8,
+        expected: 9,
         sql: 'SELECT COUNT(*) AS total FROM information_schema.check_constraints WHERE constraint_schema = DATABASE()'
       }
     ];
