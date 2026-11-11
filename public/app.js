@@ -1,197 +1,112 @@
-const apiStatus = document.querySelector('#api-status');
-const apiSymbol = document.querySelector('#api-symbol');
-const databaseStatus = document.querySelector('#database-status');
-const databaseSymbol = document.querySelector('#database-symbol');
-const statusContainer = document.querySelector('#service-status');
-const lastChecked = document.querySelector('#last-checked');
-const todayLabel = document.querySelector('#today-label');
-const refreshButton = document.querySelector('#refresh-status');
-const accountLink = document.querySelector('.account-link');
-const metricOsAbertas = document.querySelector('#metric-os-abertas');
-const metricOsEmExecucao = document.querySelector('#metric-os-em-execucao');
-const metricOsAguardandoPecas = document.querySelector('#metric-os-aguardando-pecas');
-const metricPecasAbaixoMinimo = document.querySelector('#metric-pecas-abaixo-minimo');
-const recentOrdersList = document.querySelector('#recent-orders-list');
-const dataState = document.querySelector('.data-state');
+(async () => {
+  const { esc } = OT;
+  const user = await OT.initPage('painel');
+  if (!user) return;
 
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  })[character]);
-}
+  const $ = (selector) => document.querySelector(selector);
+  const plural = (count, one, many) => `${OT.number(count)} ${Number(count) === 1 ? one : many}`;
 
-async function hydrateAccountState() {
-  if (!accountLink) {
-    return;
+  const hour = new Date().getHours();
+  const saudacao = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  $('#greeting').textContent = `${saudacao}, ${user.nome.split(' ')[0]}`;
+  const hoje = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  $('#today-label').textContent = `${hoje.charAt(0).toUpperCase()}${hoje.slice(1)}. Situação da oficina neste momento.`;
+
+  function showSummary({ summary, os_por_status: status, reposicao, equipe }) {
+    $('#metric-os-abertas').textContent = OT.number(summary.os_abertas);
+    $('#note-os').innerHTML = `<strong>${OT.number(summary.os_em_diagnostico)}</strong> em diagnóstico e <strong>${OT.number(summary.os_em_execucao)}</strong> em execução`;
+
+    $('#metric-clientes').textContent = OT.number(summary.clientes_cadastrados);
+    $('#note-clientes').innerHTML = `<strong>${OT.number(summary.veiculos_ativos)}</strong> veículos ativos vinculados`;
+
+    $('#metric-mecanicos').textContent = OT.number(summary.mecanicos_ativos);
+    $('#note-mecanicos').innerHTML = summary.os_sem_responsavel > 0
+      ? `<strong>${plural(summary.os_sem_responsavel, 'ordem', 'ordens')}</strong> sem responsável definido`
+      : 'Todas as ordens têm responsável';
+
+    $('#metric-pecas').textContent = OT.number(summary.pecas_em_estoque);
+    $('#note-pecas').innerHTML = `<strong>${OT.number(summary.unidades_em_estoque)}</strong> unidades; <strong>${OT.number(summary.pecas_abaixo_minimo)}</strong> abaixo do mínimo`;
+
+    const alert = $('#stock-alert');
+    if (summary.pecas_abaixo_minimo > 0) {
+      const semEstoque = summary.pecas_sem_estoque > 0 ? `, ${plural(summary.pecas_sem_estoque, 'delas sem nenhuma unidade', 'delas sem nenhuma unidade')}` : '';
+      $('#stock-alert-text').innerHTML = `<strong>${plural(summary.pecas_abaixo_minimo, 'peça está', 'peças estão')} abaixo do estoque mínimo</strong>${semEstoque}. <a href="/estoque.html?situacao=reposicao">Ver o que repor</a>`;
+      alert.hidden = false;
+    } else {
+      alert.hidden = true;
+    }
+
+    const maior = Math.max(1, ...status.map((item) => item.total));
+    $('#status-bars').innerHTML = status.map((item) => `
+      <div class="status-bar-row">
+        <span>${esc(item.nome)}</span>
+        <span class="status-bar-track"><span class="status-bar-fill s-${item.codigo.toLowerCase()}" style="width:${Math.round((item.total / maior) * 100)}%"></span></span>
+        <span class="num">${OT.number(item.total)}</span>
+      </div>`).join('');
+
+    $('#restock-list').innerHTML = reposicao.length
+      ? reposicao.map((peca) => `
+        <li>
+          <span><span class="strong">${esc(peca.nome)}</span><span class="cell-sub">${esc(peca.codigo)}, mínimo ${OT.number(peca.estoque_minimo)} ${esc(peca.unidade)}</span></span>
+          <span class="badge ${peca.situacao === 'SEM_ESTOQUE' ? 'danger' : 'warn'}">${peca.situacao === 'SEM_ESTOQUE' ? 'Sem estoque' : `Restam ${OT.number(peca.saldo_atual)}`}</span>
+        </li>`).join('')
+      : '<li><span class="muted">Nenhuma peça abaixo do mínimo.</span></li>';
+
+    $('#team-list').innerHTML = equipe.length
+      ? equipe.map((mecanico) => `
+        <li>
+          <span><span class="strong">${esc(mecanico.nome)}</span><span class="cell-sub">${esc(mecanico.especialidade || 'Sem especialidade informada')}</span></span>
+          <span class="badge plain ${mecanico.ordens_em_andamento > 0 ? 'petroleo' : 'neutral'}">${plural(mecanico.ordens_em_andamento, 'ordem', 'ordens')}</span>
+        </li>`).join('')
+      : '<li><span class="muted">Nenhum mecânico ativo.</span></li>';
   }
 
-  try {
-    const response = await fetch('/api/auth/me', { method: 'GET', credentials: 'same-origin' });
-    if (!response.ok) {
+  function showRecentOrders(ordens) {
+    const body = $('#recent-orders');
+    if (ordens.length === 0) {
+      body.innerHTML = OT.stateRow(5, { title: 'Nenhuma ordem de serviço', text: 'As ordens abertas aparecem aqui.' });
       return;
     }
-
-    const { user } = await response.json();
-    if (user?.perfil === 'MECANICO') {
-      window.location.replace('/mecanico.html');
-      return;
-    }
-    const firstName = user?.nome?.split(' ')[0] || 'Conta';
-    accountLink.textContent = `${firstName} · Sair`;
-    accountLink.setAttribute('aria-label', `Sair da conta de ${user.nome}`);
-    accountLink.href = '#';
-    accountLink.addEventListener('click', async (event) => {
-      event.preventDefault();
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-      window.location.href = '/login.html';
-    });
-  } catch {
-    // Ignore and keep the default login action.
-  }
-}
-
-function setStatus(label, symbol, message, state) {
-  label.textContent = message;
-  symbol.className = `status-symbol status-${state}`;
-}
-
-async function checkService(url) {
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-async function refreshDashboardSummary() {
-  if (!metricOsAbertas || !metricOsEmExecucao || !metricOsAguardandoPecas || !metricPecasAbaixoMinimo) {
-    return;
+    body.innerHTML = ordens.map((ordem) => `
+      <tr>
+        <td data-label="Ordem"><a class="os-tag" href="/ordens-servico.html#os-${esc(ordem.id_os)}">OS ${esc(ordem.id_os)}</a><span class="cell-sub">${esc(OT.date(ordem.aberta_em))}</span></td>
+        <td data-label="Cliente">${esc(ordem.cliente_nome)}</td>
+        <td data-label="Veículo">${OT.plate(ordem.veiculo_placa)}</td>
+        <td data-label="Responsável">${ordem.mecanico_nome ? esc(ordem.mecanico_nome) : '<span class="muted">Sem responsável</span>'}</td>
+        <td data-label="Status">${OT.statusBadge(ordem.status_codigo, ordem.status_nome)}</td>
+      </tr>`).join('');
   }
 
-  try {
-    const response = await fetch('/api/dashboard/summary', { credentials: 'same-origin' });
-    if (!response.ok) {
-      throw new Error('Summary unavailable');
+  async function checkService(url, dot, label, name, okText, failText) {
+    let ok = false;
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      ok = response.ok;
+    } catch {
+      ok = false;
     }
-
-    const { summary } = await response.json();
-    metricOsAbertas.textContent = Number(summary?.os_abertas || 0);
-    metricOsEmExecucao.textContent = Number(summary?.os_em_execucao || 0);
-    metricOsAguardandoPecas.textContent = Number(summary?.os_aguardando_pecas || 0);
-    metricPecasAbaixoMinimo.textContent = Number(summary?.pecas_abaixo_minimo || 0);
-
-    if (dataState) {
-      dataState.textContent = 'DADOS ATUALIZADOS';
-    }
-  } catch {
-    metricOsAbertas.textContent = '—';
-    metricOsEmExecucao.textContent = '—';
-    metricOsAguardandoPecas.textContent = '—';
-    metricPecasAbaixoMinimo.textContent = '—';
-
-    if (dataState) {
-      dataState.textContent = 'INDISPONÍVEL';
-    }
-  }
-}
-
-async function refreshRecentOrders() {
-  if (!recentOrdersList) {
-    return;
+    dot.className = `dot ${ok ? 'ok' : 'error'}`;
+    label.textContent = `${name}: ${ok ? okText : failText}`;
   }
 
-  try {
-    const response = await fetch('/api/ordens-servico', { credentials: 'same-origin' });
-    if (!response.ok) {
-      throw new Error('Oops');
+  async function refresh() {
+    $('#recent-orders').innerHTML = OT.loadingRow(5);
+    const results = await Promise.allSettled([
+      OT.api('/api/dashboard/summary').then(showSummary),
+      OT.api('/api/ordens-servico?limit=8').then((payload) => showRecentOrders(payload.ordens)),
+      checkService('/api/health', $('#api-dot'), $('#api-status'), 'Aplicação', 'disponível', 'indisponível'),
+      checkService('/api/health/database', $('#database-dot'), $('#database-status'), 'Banco de dados', 'conectado', 'sem conexão')
+    ]);
+    const failure = results.find((result) => result.status === 'rejected');
+    if (failure) {
+      OT.toast(`Não foi possível atualizar o painel: ${failure.reason.message}`, 'error');
+      if (results[1].status === 'rejected') {
+        $('#recent-orders').innerHTML = OT.stateRow(5, { iconName: 'alerta', title: 'Ordens indisponíveis', text: results[1].reason.message });
+      }
     }
-
-    const { ordens } = await response.json();
-    const latest = Array.isArray(ordens) ? ordens.slice(0, 5) : [];
-
-    if (latest.length === 0) {
-      recentOrdersList.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-marker" aria-hidden="true">—</span>
-          <h3>Nenhuma ordem carregada</h3>
-          <p>As ordens aparecerão aqui quando o módulo estiver conectado ao banco de dados.</p>
-        </div>
-      `;
-      return;
-    }
-
-    recentOrdersList.innerHTML = `
-      <div class="activity-list">
-        ${latest.map((ordem) => `
-          <article class="activity-item">
-            <div>
-              <span class="activity-tag">OS ${ordem.id_os}</span>
-              <strong>${escapeHtml(ordem.cliente_nome)}</strong>
-            </div>
-            <div class="activity-meta">
-              <span>${escapeHtml(ordem.veiculo_placa)}</span>
-              <span>${escapeHtml(ordem.status_nome)}</span>
-            </div>
-          </article>
-        `).join('')}
-      </div>
-    `;
-  } catch {
-    recentOrdersList.innerHTML = `
-      <div class="empty-state">
-        <span class="empty-marker" aria-hidden="true">—</span>
-        <h3>Não foi possível carregar</h3>
-        <p>Os dados recentes da oficina ficaram indisponíveis no momento.</p>
-      </div>
-    `;
+    $('#last-checked').textContent = `Atualizado às ${new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date())}`;
   }
-}
 
-async function refreshStatus() {
-  statusContainer.setAttribute('aria-busy', 'true');
-  setStatus(apiStatus, apiSymbol, 'Verificando', 'loading');
-  setStatus(databaseStatus, databaseSymbol, 'Verificando', 'loading');
-
-  const [apiAvailable, databaseAvailable] = await Promise.all([
-    checkService('/api/health'),
-    checkService('/api/health/database')
-  ]);
-
-  setStatus(
-    apiStatus,
-    apiSymbol,
-    apiAvailable ? 'Disponível' : 'Indisponível',
-    apiAvailable ? 'ok' : 'error'
-  );
-  setStatus(
-    databaseStatus,
-    databaseSymbol,
-    databaseAvailable ? 'Conectado' : 'Não conectado',
-    databaseAvailable ? 'ok' : 'error'
-  );
-
-  lastChecked.textContent = `Atualizado às ${new Intl.DateTimeFormat('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date())}`;
-  statusContainer.setAttribute('aria-busy', 'false');
-  await Promise.all([refreshDashboardSummary(), refreshRecentOrders()]);
-}
-
-if (todayLabel) {
-  todayLabel.textContent = new Intl.DateTimeFormat('pt-BR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric'
-  }).format(new Date());
-}
-
-hydrateAccountState();
-refreshButton?.addEventListener('click', refreshStatus);
-refreshStatus();
+  $('#refresh-button').addEventListener('click', refresh);
+  await refresh();
+})();

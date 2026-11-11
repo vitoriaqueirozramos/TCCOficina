@@ -3,158 +3,108 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f3f5f2">
+    <meta name="theme-color" content="#15232b">
     <title>Visão geral | OFICINATECH</title>
     <link rel="stylesheet" href="/styles.css">
+    <script src="/shared.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
-  <body>
-    <div class="application-shell">
-      <aside class="sidebar" aria-label="Navegação principal">
-        <a class="brand" href="/" aria-label="OFICINATECH, visão geral">
-          <span class="brand-mark" aria-hidden="true">O</span>
-          <span class="brand-copy">
-            <strong>OFICINA<span>TECH</span></strong>
-            <small>GESTÃO DE OFICINA</small>
-          </span>
-        </a>
-
-        <nav class="navigation">
-          <p class="navigation-label">OFICINA</p>
-          <a class="navigation-link is-active" href="/" aria-current="page">
-            <span class="nav-index" aria-hidden="true">01</span>
-            <span>Visão geral</span>
-          </a>
-          <a class="navigation-link" href="/ordens-servico.html">
-            <span class="nav-index" aria-hidden="true">02</span>
-            <span>Ordens de serviço</span>
-          </a>
-
-          <p class="navigation-label">CADASTROS</p>
-          <a class="navigation-link" href="/clientes.html">
-            <span class="nav-index" aria-hidden="true">03</span>
-            <span>Clientes e veículos</span>
-          </a>
-          <a class="navigation-link" href="/servicos.html">
-            <span class="nav-index" aria-hidden="true">04</span>
-            <span>Serviços</span>
-          </a>
-          <a class="navigation-link" href="/pecas.html">
-            <span class="nav-index" aria-hidden="true">05</span>
-            <span>Peças</span>
-          </a>
-          <a class="navigation-link" href="/estoque.html">
-            <span class="nav-index" aria-hidden="true">06</span>
-            <span>Estoque</span>
-          </a>
-          <a class="navigation-link" href="/mecanicos.html">
-            <span class="nav-index" aria-hidden="true">07</span>
-            <span>Equipe</span>
-          </a>
-        </nav>
-
-        <div class="sidebar-foot">
-          <span class="environment-dot" aria-hidden="true"></span>
-          <span>AMBIENTE LOCAL</span>
-          <span class="environment-version">v0.1</span>
+  <body class="shell">
+    <main class="page" id="conteudo">
+      <header class="page-header">
+        <div>
+          <h1 id="greeting">Visão geral</h1>
+          <p id="today-label">Situação da oficina neste momento.</p>
         </div>
-      </aside>
+        <div class="page-actions">
+          <button type="button" class="btn btn-secondary" id="refresh-button"><span data-icon="atualizar"></span>Atualizar</button>
+          <a class="btn btn-primary" href="/ordens-servico.html#nova"><span data-icon="mais"></span>Nova ordem de serviço</a>
+        </div>
+      </header>
 
-      <main class="main-content">
-        <header class="topbar">
-          <p class="breadcrumb">OFICINATECH <span>/</span> PAINEL</p>
-          <time id="today-label" class="today-label"></time>
-            <a class="account-link" href="/login.html">Entrar</a>
-        </header>
+      <div class="alert" id="stock-alert" role="status" hidden>
+        <span data-icon="alerta"></span>
+        <p id="stock-alert-text"></p>
+      </div>
 
-        <section class="page-heading" aria-labelledby="page-title">
-          <div>
-            <p class="eyebrow">CENTRAL DE OPERAÇÕES</p>
-            <h1 id="page-title">Visão geral</h1>
-            <p class="page-description">Acompanhe a disponibilidade do ambiente e os indicadores da oficina.</p>
-          </div>
-          <button class="refresh-button" id="refresh-status" type="button">
-            <span aria-hidden="true">↻</span>
-            Atualizar status
-          </button>
-        </section>
+      <section class="stat-grid" aria-label="Indicadores da oficina">
+        <a class="stat" href="/ordens-servico.html">
+          <span class="stat-label">Ordens de serviço abertas</span>
+          <span class="stat-icon"><span data-icon="os"></span></span>
+          <strong class="stat-value" id="metric-os-abertas">—</strong>
+          <span class="stat-note" id="note-os">Carregando…</span>
+        </a>
+        <a class="stat is-info" href="/clientes.html">
+          <span class="stat-label">Clientes cadastrados</span>
+          <span class="stat-icon"><span data-icon="clientes"></span></span>
+          <strong class="stat-value" id="metric-clientes">—</strong>
+          <span class="stat-note" id="note-clientes">Carregando…</span>
+        </a>
+        <a class="stat is-ok" href="/mecanicos.html">
+          <span class="stat-label">Mecânicos ativos</span>
+          <span class="stat-icon"><span data-icon="mecanicos"></span></span>
+          <strong class="stat-value" id="metric-mecanicos">—</strong>
+          <span class="stat-note" id="note-mecanicos">Carregando…</span>
+        </a>
+        <a class="stat is-warn" href="/estoque.html">
+          <span class="stat-label">Peças em estoque</span>
+          <span class="stat-icon"><span data-icon="estoque"></span></span>
+          <strong class="stat-value" id="metric-pecas">—</strong>
+          <span class="stat-note" id="note-pecas">Carregando…</span>
+        </a>
+      </section>
 
-        <section class="environment-panel" aria-labelledby="environment-title">
-          <div class="panel-heading">
+      <div class="grid-2">
+        <section class="card" aria-labelledby="recent-title">
+          <div class="card-header">
             <div>
-              <p class="eyebrow">SISTEMA</p>
-              <h2 id="environment-title">Estado do ambiente</h2>
+              <h2 id="recent-title">Ordens recentes</h2>
+              <p>As últimas ordens abertas na oficina.</p>
             </div>
-            <span class="panel-updated" id="last-checked">Verificando...</span>
+            <a class="btn btn-ghost btn-sm" href="/ordens-servico.html">Ver todas</a>
           </div>
-          <div class="status-grid" aria-live="polite" aria-busy="true" id="service-status">
-            <div class="status-item">
-              <span class="status-symbol status-loading" id="api-symbol" aria-hidden="true"></span>
-              <div>
-                <span class="status-name">API</span>
-                <strong id="api-status">Verificando</strong>
-              </div>
-              <span class="status-detail">Servidor da aplicação</span>
-            </div>
-            <div class="status-item">
-              <span class="status-symbol status-loading" id="database-symbol" aria-hidden="true"></span>
-              <div>
-                <span class="status-name">MYSQL</span>
-                <strong id="database-status">Verificando</strong>
-              </div>
-              <span class="status-detail">Banco de dados</span>
-            </div>
+          <div class="table-wrap">
+            <table class="data stacked">
+              <thead>
+                <tr>
+                  <th scope="col">Ordem</th>
+                  <th scope="col">Cliente</th>
+                  <th scope="col">Veículo</th>
+                  <th scope="col">Responsável</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders"></tbody>
+            </table>
           </div>
         </section>
 
-        <section class="metrics-section" aria-labelledby="metrics-title">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">ACOMPANHAMENTO</p>
-              <h2 id="metrics-title">Indicadores da oficina</h2>
-            </div>
-            <span class="data-state">AGUARDANDO MÓDULO DE DADOS</span>
-          </div>
-          <div class="metrics-grid">
-            <article class="metric-item">
-              <span class="metric-label">OS abertas</span>
-              <strong class="metric-value" id="metric-os-abertas">—</strong>
-              <span class="metric-note">Acompanhamento em tempo real</span>
-            </article>
-            <article class="metric-item">
-              <span class="metric-label">Em execução</span>
-              <strong class="metric-value" id="metric-os-em-execucao">—</strong>
-              <span class="metric-note">Ordens em uma etapa ativa</span>
-            </article>
-            <article class="metric-item">
-              <span class="metric-label">Aguardando peças</span>
-              <strong class="metric-value" id="metric-os-aguardando-pecas">—</strong>
-              <span class="metric-note">Itens dependentes de reposição</span>
-            </article>
-            <article class="metric-item">
-              <span class="metric-label">Estoque abaixo do mínimo</span>
-              <strong class="metric-value" id="metric-pecas-abaixo-minimo">—</strong>
-              <span class="metric-note">Produtos com consumo crítico</span>
-            </article>
-          </div>
-        </section>
+        <div class="stack">
+          <section class="card" aria-labelledby="status-title">
+            <div class="card-header"><h2 id="status-title">Ordens por status</h2></div>
+            <div class="card-body"><div class="status-bars" id="status-bars"></div></div>
+          </section>
 
-        <section class="activity-section" aria-labelledby="activity-title">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">MOVIMENTAÇÃO</p>
-              <h2 id="activity-title">Ordens recentes</h2>
+          <section class="card" aria-labelledby="restock-title">
+            <div class="card-header">
+              <h2 id="restock-title">Reposição necessária</h2>
+              <a class="btn btn-ghost btn-sm" href="/estoque.html">Abrir estoque</a>
             </div>
-            <span class="activity-period">ÚLTIMAS ATUALIZAÇÕES</span>
-          </div>
-          <div id="recent-orders-list" aria-live="polite"></div>
-        </section>
+            <ul class="list" id="restock-list"></ul>
+          </section>
 
-        <footer class="page-footer">
-          <span>OFICINATECH</span>
-          <span>GERENCIAMENTO DE OFICINA MECÂNICA</span>
-        </footer>
-      </main>
-    </div>
+          <section class="card" aria-labelledby="team-title">
+            <div class="card-header"><h2 id="team-title">Equipe</h2></div>
+            <ul class="list" id="team-list"></ul>
+          </section>
+        </div>
+      </div>
+
+      <p class="system-status" aria-live="polite">
+        <span><span class="dot" id="api-dot"></span><span id="api-status">Aplicação: verificando</span></span>
+        <span><span class="dot" id="database-dot"></span><span id="database-status">Banco de dados: verificando</span></span>
+        <span id="last-checked"></span>
+      </p>
+    </main>
   </body>
 </html>

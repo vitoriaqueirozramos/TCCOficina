@@ -3,80 +3,157 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#15232b">
     <title>Estoque | OFICINATECH</title>
     <link rel="stylesheet" href="/styles.css">
+    <script src="/shared.js" defer></script>
+    <script src="/peca-form.js" defer></script>
+    <script src="/movimento-util.js" defer></script>
     <script src="/estoque.js" defer></script>
   </head>
-  <body>
-    <div class="application-shell">
-      <aside class="sidebar" aria-label="Navegação principal">
-        <a class="brand" href="/" aria-label="OFICINATECH, visão geral">
-          <span class="brand-mark" aria-hidden="true">O</span>
-          <span class="brand-copy">
-            <strong>OFICINA<span>TECH</span></strong>
-            <small>GESTÃO DE OFICINA</small>
-          </span>
-        </a>
+  <body class="shell">
+    <main class="page" id="conteudo">
+      <header class="page-header">
+        <div>
+          <h1>Estoque</h1>
+          <p>Saldo de cada peça, calculado pelas movimentações. Veja o que precisa de reposição antes de faltar.</p>
+        </div>
+        <div class="page-actions">
+          <a class="btn btn-secondary" href="/movimentacoes.html#nova"><span data-icon="movimentos"></span>Nova movimentação</a>
+          <button type="button" class="btn btn-primary" id="new-button"><span data-icon="mais"></span>Nova peça</button>
+        </div>
+      </header>
 
-        <nav class="navigation">
-          <p class="navigation-label">OFICINA</p>
-          <a class="navigation-link" href="/">Visão geral</a>
-          <a class="navigation-link" href="/ordens-servico.html">Ordens de serviço</a>
-          <p class="navigation-label">CADASTROS</p>
-          <a class="navigation-link" href="/clientes.html">Clientes e veículos</a>
-          <a class="navigation-link" href="/servicos.html">Serviços</a>
-          <a class="navigation-link" href="/pecas.html">Peças</a>
-          <a class="navigation-link is-active" href="/estoque.html" aria-current="page">Estoque</a>
-          <a class="navigation-link" href="/mecanicos.html">Equipe</a>
-        </nav>
-      </aside>
+      <div class="alert" id="stock-alert" role="status" hidden>
+        <span data-icon="alerta"></span>
+        <p id="stock-alert-text"></p>
+      </div>
 
-      <main class="main-content">
-        <header class="topbar">
-          <p class="breadcrumb">OFICINATECH <span>/</span> ESTOQUE</p>
-          <a class="account-link" href="/login.html">Entrar</a>
-        </header>
+      <section class="stat-grid" aria-label="Indicadores do estoque">
+        <div class="stat">
+          <span class="stat-label">Total de produtos</span>
+          <span class="stat-icon"><span data-icon="estoque"></span></span>
+          <strong class="stat-value" id="stat-total">—</strong>
+          <span class="stat-note" id="note-total">Carregando…</span>
+        </div>
+        <div class="stat is-warn">
+          <span class="stat-label">Estoque baixo</span>
+          <span class="stat-icon"><span data-icon="alerta"></span></span>
+          <strong class="stat-value" id="stat-baixo">—</strong>
+          <span class="stat-note">Abaixo do mínimo definido</span>
+        </div>
+        <div class="stat is-danger">
+          <span class="stat-label">Sem estoque</span>
+          <span class="stat-icon"><span data-icon="vazio"></span></span>
+          <strong class="stat-value" id="stat-zerado">—</strong>
+          <span class="stat-note">Nenhuma unidade disponível</span>
+        </div>
+        <div class="stat is-ok">
+          <span class="stat-label">Valor do estoque</span>
+          <span class="stat-icon"><span data-icon="dinheiro"></span></span>
+          <strong class="stat-value" id="stat-valor">—</strong>
+          <span class="stat-note">Saldo de cada peça pelo preço de custo</span>
+        </div>
+      </section>
 
-        <section class="page-heading">
-          <div>
-            <p class="eyebrow">INVENTÁRIO</p>
-            <h1>Movimentações de estoque</h1>
-          </div>
-        </section>
-
-        <section class="panel">
-          <h2>Registrar movimento</h2>
-          <form id="estoque-form" class="stacked-form">
-            <div class="field-row">
-              <label>
-                Peça
-                <select id="id_peca" name="id_peca" required></select>
-              </label>
-              <label>
-                Motivo
-                <select id="motivo" name="motivo" required>
-                  <option value="ENTRADA">Entrada</option>
-                  <option value="AJUSTE">Ajuste</option>
-                </select>
-              </label>
-              <label>
-                Quantidade
-                <input id="quantidade_delta" name="quantidade_delta" type="number" step="1" required>
-              </label>
+      <section class="card" aria-label="Posição de estoque">
+        <div class="toolbar">
+          <div class="field grow">
+            <label for="search">Pesquisar</label>
+            <div class="search-input">
+              <span data-icon="busca"></span>
+              <input id="search" type="search" placeholder="Nome ou código da peça" autocomplete="off">
             </div>
-            <label>
-              Observação
-              <textarea id="observacao" name="observacao" rows="3"></textarea>
-            </label>
-            <button type="submit" class="primary-button">Salvar movimento</button>
-          </form>
-        </section>
+          </div>
+          <div class="field">
+            <label for="filter-categoria">Categoria</label>
+            <select id="filter-categoria"><option value="">Todas</option></select>
+          </div>
+          <div class="field">
+            <label for="filter-situacao">Situação do estoque</label>
+            <select id="filter-situacao">
+              <option value="">Todas</option>
+              <option value="REPOSICAO">Precisa de reposição</option>
+              <option value="DISPONIVEL">Disponível</option>
+              <option value="BAIXO">Estoque baixo</option>
+              <option value="SEM_ESTOQUE">Sem estoque</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filter-ativo">Cadastro</label>
+            <select id="filter-ativo">
+              <option value="true" selected>Ativos</option>
+              <option value="false">Inativos</option>
+              <option value="all">Todos</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data stacked">
+            <thead>
+              <tr>
+                <th scope="col"><button type="button" class="sort-button" data-sort="codigo">Código</button></th>
+                <th scope="col"><button type="button" class="sort-button" data-sort="nome" aria-sort="ascending">Produto</button></th>
+                <th scope="col"><button type="button" class="sort-button" data-sort="categoria">Categoria</button></th>
+                <th scope="col" class="num"><button type="button" class="sort-button" data-sort="saldo">Disponível</button></th>
+                <th scope="col" class="num"><button type="button" class="sort-button" data-sort="minimo">Mínimo</button></th>
+                <th scope="col" class="num"><button type="button" class="sort-button" data-sort="preco">Preço</button></th>
+                <th scope="col">Situação</th>
+                <th scope="col" class="actions"><span class="sr-only">Ações</span></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </section>
+    </main>
 
-        <section class="panel">
-          <h2>Histórico</h2>
-          <div id="estoque-list" class="table-shell"></div>
-        </section>
-      </main>
-    </div>
+    <dialog class="modal" id="form-dialog" aria-labelledby="form-title">
+      <div class="modal-header">
+        <h2 id="form-title">Nova peça</h2>
+        <button type="button" class="icon-button" data-close-modal aria-label="Fechar"><span data-icon="fechar"></span></button>
+      </div>
+      <div class="modal-body">
+        <form id="form">
+          <p class="form-error" id="form-error" role="alert" hidden></p>
+          <div id="peca-fields"></div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="form-submit">Cadastrar peça</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog class="modal wide" id="history-dialog" aria-labelledby="history-title">
+      <div class="modal-header">
+        <div>
+          <h2 id="history-title">Movimentações da peça</h2>
+        </div>
+        <button type="button" class="icon-button" data-close-modal aria-label="Fechar"><span data-icon="fechar"></span></button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-text" id="history-summary"></p>
+        <div class="table-wrap">
+          <table class="data stacked">
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Tipo</th>
+                <th scope="col" class="num">Quantidade</th>
+                <th scope="col">Responsável</th>
+                <th scope="col">Motivo</th>
+              </tr>
+            </thead>
+            <tbody id="history-rows"></tbody>
+          </table>
+        </div>
+        <div class="form-actions">
+          <a class="btn btn-secondary" id="history-all" href="/movimentacoes.html">Ver histórico completo</a>
+          <a class="btn btn-primary" id="history-new" href="/movimentacoes.html#nova">Nova movimentação</a>
+        </div>
+      </div>
+    </dialog>
   </body>
 </html>

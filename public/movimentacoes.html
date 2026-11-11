@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#15232b">
+    <title>Movimentações de estoque | OFICINATECH</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/shared.js" defer></script>
+    <script src="/movimento-util.js" defer></script>
+    <script src="/movimentacoes.js" defer></script>
+  </head>
+  <body class="shell">
+    <main class="page" id="conteudo">
+      <header class="page-header">
+        <div>
+          <h1>Movimentações de estoque</h1>
+          <p>Entradas, saídas e ajustes de peças, com data, responsável e motivo de cada lançamento.</p>
+        </div>
+        <div class="page-actions">
+          <button type="button" class="btn btn-primary" id="new-button"><span data-icon="mais"></span>Nova movimentação</button>
+        </div>
+      </header>
+
+      <section class="stat-grid" aria-label="Indicadores das movimentações">
+        <div class="stat">
+          <span class="stat-label">Total de movimentações</span>
+          <span class="stat-icon"><span data-icon="movimentos"></span></span>
+          <strong class="stat-value" id="stat-total">—</strong>
+          <span class="stat-note" id="note-total">Carregando…</span>
+        </div>
+        <div class="stat is-ok">
+          <span class="stat-label">Entradas realizadas</span>
+          <span class="stat-icon"><span data-icon="entrada"></span></span>
+          <strong class="stat-value" id="stat-entradas">—</strong>
+          <span class="stat-note" id="note-entradas">Carregando…</span>
+        </div>
+        <div class="stat is-danger">
+          <span class="stat-label">Saídas realizadas</span>
+          <span class="stat-icon"><span data-icon="saida"></span></span>
+          <strong class="stat-value" id="stat-saidas">—</strong>
+          <span class="stat-note" id="note-saidas">Carregando…</span>
+        </div>
+        <div class="stat is-info">
+          <span class="stat-label">Ajustes realizados</span>
+          <span class="stat-icon"><span data-icon="ajuste"></span></span>
+          <strong class="stat-value" id="stat-ajustes">—</strong>
+          <span class="stat-note">Correções por contagem de inventário</span>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="history-heading">
+        <div class="card-header">
+          <div>
+            <h2 id="history-heading">Histórico de movimentações</h2>
+            <p id="filter-note">Do lançamento mais recente para o mais antigo.</p>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" id="clear-filters">Limpar filtros</button>
+        </div>
+        <div class="toolbar">
+          <div class="field grow">
+            <label for="search">Peça</label>
+            <div class="search-input">
+              <span data-icon="busca"></span>
+              <input id="search" type="search" placeholder="Nome ou código da peça" autocomplete="off">
+            </div>
+          </div>
+          <div class="field">
+            <label for="filter-tipo">Tipo</label>
+            <select id="filter-tipo">
+              <option value="">Todos</option>
+              <option value="ENTRADA">Entradas</option>
+              <option value="SAIDA">Saídas</option>
+              <option value="AJUSTE">Ajustes</option>
+              <option value="ESTORNO">Estornos de OS</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filter-de">De</label>
+            <input id="filter-de" type="date">
+          </div>
+          <div class="field">
+            <label for="filter-ate">Até</label>
+            <input id="filter-ate" type="date">
+          </div>
+          <div class="field">
+            <label for="filter-responsavel">Responsável</label>
+            <select id="filter-responsavel"><option value="">Todos</option></select>
+          </div>
+          <div class="field">
+            <label for="filter-os">Ordem de serviço</label>
+            <input id="filter-os" type="number" min="1" step="1" placeholder="Nº da OS">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data stacked">
+            <thead>
+              <tr>
+                <th scope="col">Data e hora</th>
+                <th scope="col">Peça</th>
+                <th scope="col">Tipo</th>
+                <th scope="col" class="num">Quantidade</th>
+                <th scope="col">Responsável</th>
+                <th scope="col">Motivo</th>
+                <th scope="col">Observação</th>
+                <th scope="col">Ordem de serviço</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </section>
+    </main>
+
+    <dialog class="modal" id="movement-dialog" aria-labelledby="movement-title">
+      <div class="modal-header">
+        <h2 id="movement-title">Nova movimentação</h2>
+        <button type="button" class="icon-button" data-close-modal aria-label="Fechar"><span data-icon="fechar"></span></button>
+      </div>
+      <div class="modal-body">
+        <form id="movement-form">
+          <p class="form-error" id="movement-error" role="alert" hidden></p>
+
+          <div class="field">
+            <label for="m-peca">Peça</label>
+            <select id="m-peca" name="id_peca" required></select>
+          </div>
+
+          <fieldset class="segmented">
+            <legend>Tipo de movimentação</legend>
+            <label class="t-entrada"><input type="radio" name="tipo" value="ENTRADA" checked><span data-icon="entrada"></span>Entrada</label>
+            <label class="t-saida"><input type="radio" name="tipo" value="SAIDA"><span data-icon="saida"></span>Saída</label>
+            <label class="t-ajuste"><input type="radio" name="tipo" value="AJUSTE"><span data-icon="ajuste"></span>Ajuste</label>
+          </fieldset>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="m-quantidade" id="m-quantidade-label">Quantidade recebida</label>
+              <input id="m-quantidade" name="quantidade" type="number" min="1" step="1" inputmode="numeric" required>
+              <span class="hint" id="m-quantidade-hint">Informe apenas o número; o sistema soma ao saldo.</span>
+            </div>
+            <div class="field">
+              <label for="m-motivo">Motivo <span class="optional" id="m-motivo-optional">(opcional)</span></label>
+              <select id="m-motivo" name="justificativa"></select>
+            </div>
+          </div>
+
+          <div class="balance-preview" id="balance-preview" aria-live="polite">Selecione a peça para ver o saldo.</div>
+
+          <div class="field">
+            <label for="m-observacao">Observação <span class="optional">(opcional)</span></label>
+            <textarea id="m-observacao" name="observacao" rows="2" maxlength="255" placeholder="Ex.: nota fiscal, fornecedor ou detalhe da contagem"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="movement-submit">Registrar entrada</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+  </body>
+</html>
