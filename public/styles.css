@@ -463,3 +463,16 @@ body.mechanic { padding: 0; }
   body.shell { padding: 0; background: #fff; }
   .card { box-shadow: none; }
 }
+
+/* Ajustes de encaixe em telas de notebook */
+.stat-icon { grid-row: auto; }
+.stat-value { grid-column: 1 / -1; overflow-wrap: anywhere; }
+.field { align-content: start; }
+td.actions { white-space: nowrap; }
+@media (min-width: 761px) and (max-width: 1440px) {
+  .table-wrap th, .table-wrap td { padding-left: 10px; padding-right: 10px; }
+  td.actions .btn-sm { padding-left: 9px; padding-right: 9px; }
+}
+.order-cards > .card { margin-top: 0; }
+.order-cards { align-items: start; }
+.mechanic-bar .btn { background: transparent; }
