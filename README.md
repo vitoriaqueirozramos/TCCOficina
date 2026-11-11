@@ -49,3 +49,31 @@ A implementação atual está em estágio funcional de demonstração local. Os 
 - O projeto foi pensado para uso em ambiente local de desenvolvimento.
 - Os arquivos de ambiente ficam localmente fora do controle de versionamento.
 - A criação de usuários administrativos é feita via comando seguro no terminal, sem expor a senha no console.
+
+## Publicação (TiDB Cloud + Vercel)
+
+O sistema roda localmente com MySQL 8 e também pode ser publicado com o banco no TiDB Cloud e a aplicação na Vercel.
+
+### Banco no TiDB Cloud
+
+1. Crie um cluster Serverless e copie host, usuário e senha (botão Connect).
+2. Crie o arquivo `.env.tidb` na raiz (ele é ignorado pelo Git) com `DB_HOST`, `DB_PORT=4000`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` e `DB_SSL=true`.
+3. Rode `npm run db:copy-cloud` para simular e `npm run db:copy-cloud -- --apply` para copiar tabelas, dados e a view do banco local. O banco local é apenas lido e o destino precisa estar vazio.
+
+### Aplicação na Vercel
+
+O arquivo `api/index.js` expõe a aplicação Express como função e o `vercel.json` encaminha `/api/*` para ela. A pasta `public/` é servida diretamente.
+
+Variáveis de ambiente a cadastrar no projeto da Vercel:
+
+| Variável | Obrigatória | Observação |
+|---|---|---|
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | sim | dados do TiDB Cloud |
+| `DB_SSL` | sim | `true` |
+| `JWT_SECRET` | sim | 32 caracteres ou mais |
+| `DB_POOL_LIMIT` | não | padrão 3 na Vercel |
+| `SESSION_MINUTES` | não | duração da sessão em minutos, padrão 480 |
+
+### Testes
+
+`npm test` recria e usa um banco separado, com o sufixo `_test`; o banco principal não é alterado.
