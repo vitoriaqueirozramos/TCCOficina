@@ -3,264 +3,243 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#15232b">
     <title>Ordens de serviço | OFICINATECH</title>
-    <style>
-      :root {
-        --bg: #edf1ec;
-        --paper: #f8faf7;
-        --ink: #142118;
-        --muted: #5d6d5f;
-        --line: #d9e1d7;
-        --forest: #1d4d2d;
-        --forest-deep: #133720;
-        --success: #1c8a4d;
-        --danger: #a73f3f;
-      }
-      * { box-sizing: border-box; }
-      body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--ink); }
-      .shell { max-width: 1200px; margin: 0 auto; padding: 32px 20px 48px; }
-      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
-      .brand { text-decoration: none; color: var(--forest-deep); font-weight: 700; letter-spacing: 0.08em; }
-      .nav-actions { display: flex; align-items: center; gap: 12px; }
-      .ghost-link, .logout-button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; padding: 9px 14px; font: inherit; cursor: pointer; text-decoration: none; }
-      .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 20px 38px rgba(19, 30, 21, 0.04); padding: 24px; }
-      h1 { margin: 0 0 8px; font-size: 2rem; }
-      .subtitle { margin: 0 0 24px; color: var(--muted); }
-      .grid { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 22px; }
-      .panel { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 18px; }
-      .panel h2 { margin: 0 0 16px; font-size: 1.1rem; }
-      form { display: grid; gap: 14px; }
-      label { display: grid; gap: 8px; font-size: 0.9rem; color: var(--muted); }
-      input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #c7d0c9; border-radius: 6px; font: inherit; }
-      textarea { min-height: 100px; resize: vertical; }
-      .inline-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-      .primary-button { border: 0; border-radius: 6px; background: var(--forest); color: #fff; padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer; }
-      .message { min-height: 22px; margin-top: 10px; font-size: 0.9rem; }
-      .message.error { color: var(--danger); }
-      .message.success { color: var(--success); }
-      table { width: 100%; border-collapse: collapse; }
-      th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-      th { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-      .empty-state { padding: 18px 10px; color: var(--muted); }
-      .detail-panel { margin-top: 22px; }
-      .detail-toolbar { margin-bottom: 18px; }
-      .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-      .mini-form { display: grid; gap: 12px; }
-      .mini-form .inline-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      @media (max-width: 760px) {
-        .shell { max-width: 100%; padding: 22px 12px 32px; }
-        .topbar { align-items: flex-start; flex-direction: column; }
-        .nav-actions { width: 100%; max-width: 100%; overflow-x: auto; padding-bottom: 4px; }
-        .card { min-width: 0; padding: 16px; }
-        .grid, .detail-grid { grid-template-columns: minmax(0, 1fr); }
-        .panel { min-width: 0; }
-        .inline-fields, .mini-form .inline-fields { grid-template-columns: minmax(0, 1fr); }
-        .table-scroll { max-width: 100%; overflow-x: auto; }
-        .table-scroll table { min-width: 520px; }
-      }
-    </style>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/shared.js" defer></script>
+    <script src="/ordens-servico.js" defer></script>
   </head>
-  <body>
-    <div class="shell">
-      <header class="topbar">
-        <a class="brand" href="/">OFICINATECH</a>
-        <div class="nav-actions">
-          <a class="ghost-link" href="/">Painel</a>
-          <a class="ghost-link" href="/clientes.html">Clientes</a>
-          <a class="ghost-link" href="/servicos.html">Serviços</a>
-          <a class="ghost-link" href="/pecas.html">Peças</a>
-          <button class="logout-button" id="logout-button" type="button">Sair</button>
-        </div>
-      </header>
+  <body class="shell">
+    <main class="page" id="conteudo">
+      <!-- Lista -->
+      <div id="list-view">
+        <header class="page-header">
+          <div>
+            <h1>Ordens de serviço</h1>
+            <p>Abra ordens, defina o mecânico responsável e acompanhe cada serviço até a entrega do veículo.</p>
+          </div>
+          <div class="page-actions">
+            <button type="button" class="btn btn-primary" id="new-button"><span data-icon="mais"></span>Nova ordem de serviço</button>
+          </div>
+        </header>
 
-      <main class="card">
-        <h1>Ordens de serviço</h1>
-        <p class="subtitle">Abra e acompanhe as ordens de trabalho da oficina.</p>
-
-        <div class="grid">
-          <section class="panel" aria-labelledby="cadastro-title">
-            <h2 id="cadastro-title">Nova ordem</h2>
-            <form id="ordem-form">
-              <label>
-                Cliente
-                <select name="id_cliente" required></select>
-              </label>
-
-              <label>
-                Veículo
-                <select name="id_veiculo" required></select>
-              </label>
-
-              <label>
-                Mecânico
-                <select name="id_mecanico"></select>
-              </label>
-
-              <div class="inline-fields">
-                <label>
-                  Quilometragem
-                  <input name="quilometragem_entrada" type="number" min="0" placeholder="45000">
-                </label>
-                <label>
-                  Previsão de conclusão
-                  <input name="previsao_conclusao" type="datetime-local">
-                </label>
+        <section class="card" aria-label="Lista de ordens de serviço">
+          <div class="toolbar">
+            <div class="field grow">
+              <label for="search">Pesquisar</label>
+              <div class="search-input">
+                <span data-icon="busca"></span>
+                <input id="search" type="search" placeholder="Cliente, placa ou número da ordem" autocomplete="off">
               </div>
-
-              <label>
-                Diagnóstico
-                <textarea name="diagnostico" placeholder="Descreva o problema observado"></textarea>
-              </label>
-
-              <label>
-                Observações
-                <textarea name="observacoes" placeholder="Observações adicionais"></textarea>
-              </label>
-
-              <button class="primary-button" type="submit">Salvar ordem</button>
-            </form>
-            <div id="ordem-message" class="message" aria-live="polite"></div>
-          </section>
-
-          <section class="panel" aria-labelledby="lista-title">
-            <h2 id="lista-title">Ordens em aberto</h2>
-            <div class="table-scroll">
-            <table>
+            </div>
+            <div class="field">
+              <label for="filter-status">Status</label>
+              <select id="filter-status"><option value="">Todos</option></select>
+            </div>
+            <div class="field">
+              <label for="filter-mecanico">Responsável</label>
+              <select id="filter-mecanico"><option value="">Todos</option></select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data stacked">
               <thead>
                 <tr>
-                  <th>Cliente</th>
-                  <th>Veículo</th>
-                  <th>Status</th>
-                  <th>Total</th>
+                  <th scope="col">Ordem</th>
+                  <th scope="col">Cliente</th>
+                  <th scope="col">Veículo</th>
+                  <th scope="col">Responsável</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" class="num">Total</th>
+                  <th scope="col" class="actions"><span class="sr-only">Ações</span></th>
                 </tr>
               </thead>
-              <tbody id="ordens-body"></tbody>
+              <tbody id="rows"></tbody>
             </table>
-            </div>
-          </section>
-        </div>
-
-        <section class="panel detail-panel" aria-labelledby="detalhes-title">
-          <h2 id="detalhes-title">Detalhes da ordem</h2>
-
-          <div class="detail-toolbar">
-            <label>
-              Ordem selecionada
-              <select id="ordem-detalhe-select"></select>
-            </label>
-            <p>Total da ordem: <strong id="ordem-total">R$ 0,00</strong></p>
           </div>
-
-          <div class="detail-grid">
-            <div>
-              <h3>Status e histórico</h3>
-              <form id="status-update-form" class="mini-form">
-                <label>
-                  Novo status
-                  <select id="status-update-select" name="id_status_os" required></select>
-                </label>
-                <label>
-                  Observação
-                  <input name="observacao" type="text" placeholder="Descreva a mudança de status">
-                </label>
-                <button class="primary-button" type="submit">Atualizar status</button>
-              </form>
-              <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Status</th>
-                    <th>Usuário</th>
-                    <th>Data</th>
-                  </tr>
-                </thead>
-                <tbody id="status-historico-body"></tbody>
-              </table>
-              </div>
-            </div>
-
-            <div>
-              <h3>Serviços</h3>
-              <form id="service-item-form" class="mini-form">
-                <label>
-                  Serviço
-                  <select id="id_servico" name="id_servico" required></select>
-                </label>
-                <div class="inline-fields">
-                  <label>
-                    Quantidade
-                    <input name="quantidade" type="number" min="1" step="1" value="1" required>
-                  </label>
-                  <label>
-                    Valor unitário
-                    <input name="valor_unitario" type="number" min="0" step="0.01" required>
-                  </label>
-                </div>
-                <label>
-                  Descrição
-                  <input name="descricao_snapshot" type="text" placeholder="Descrição do serviço" required>
-                </label>
-                <button class="primary-button" type="submit">Adicionar serviço</button>
-                <button class="ghost-link" id="cancel-service-edit" type="button" hidden>Cancelar edição</button>
-              </form>
-              <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Serviço</th>
-                    <th>Qtd.</th>
-                    <th>Valor</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="os-servicos-body"></tbody>
-              </table>
-              </div>
-            </div>
-
-            <div>
-              <h3>Peças</h3>
-              <form id="part-item-form" class="mini-form">
-                <label>
-                  Peça
-                  <select id="id_peca" name="id_peca" required></select>
-                </label>
-                <div class="inline-fields">
-                  <label>
-                    Quantidade
-                    <input name="quantidade" type="number" min="1" step="1" value="1" required>
-                  </label>
-                  <label>
-                    Valor unitário
-                    <input name="valor_unitario" type="number" min="0" step="0.01" required>
-                  </label>
-                </div>
-                <label>
-                  Descrição
-                  <input name="descricao_snapshot" type="text" placeholder="Descrição da peça" required>
-                </label>
-                <button class="primary-button" type="submit">Adicionar peça</button>
-                <button class="ghost-link" id="cancel-part-edit" type="button" hidden>Cancelar edição</button>
-              </form>
-              <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Peça</th>
-                    <th>Qtd.</th>
-                    <th>Valor</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="os-pecas-body"></tbody>
-              </table>
-              </div>
-            </div>
-          </div>
+          <div class="pagination" id="pagination"></div>
         </section>
-      </main>
-    </div>
+      </div>
 
-    <script src="/ordens-servico.js"></script>
+      <!-- Detalhe -->
+      <div id="detail-view" hidden>
+        <header class="page-header">
+          <div>
+            <a class="btn btn-ghost btn-sm" href="#" id="back-button"><span data-icon="voltar"></span>Voltar para a lista</a>
+            <div class="os-head">
+              <h1 id="detail-title">Ordem de serviço</h1>
+              <span id="detail-status"></span>
+            </div>
+            <p id="detail-subtitle"></p>
+          </div>
+        </header>
+
+        <section class="card" aria-label="Dados da ordem">
+          <dl class="os-summary">
+            <div><dt>Cliente</dt><dd id="d-cliente">—</dd></div>
+            <div><dt>Veículo</dt><dd id="d-veiculo">—</dd></div>
+            <div><dt>Quilometragem de entrada</dt><dd id="d-km">—</dd></div>
+            <div><dt>Previsão de conclusão</dt><dd id="d-previsao">—</dd></div>
+            <div class="span-2">
+              <dt>Mecânico responsável</dt>
+              <dd class="vehicle-line"><span id="d-mecanico">—</span><button type="button" class="btn btn-secondary btn-sm" id="assign-button">Alterar responsável</button></dd>
+            </div>
+            <div><dt>Aberta em</dt><dd id="d-abertura">—</dd></div>
+            <div><dt>Concluída em</dt><dd id="d-conclusao">—</dd></div>
+            <div class="span-2"><dt>Diagnóstico</dt><dd class="text" id="d-diagnostico">—</dd></div>
+            <div class="span-2"><dt>Observações</dt><dd class="text" id="d-observacoes">—</dd></div>
+          </dl>
+        </section>
+
+        <div class="grid-2">
+          <div class="stack">
+            <section class="card" aria-labelledby="services-title">
+              <div class="card-header"><h2 id="services-title">Serviços</h2></div>
+              <div class="table-wrap">
+                <table class="data stacked">
+                  <thead><tr><th scope="col">Serviço</th><th scope="col" class="num">Qtd.</th><th scope="col" class="num">Valor unitário</th><th scope="col" class="num">Subtotal</th><th scope="col" class="actions"><span class="sr-only">Ações</span></th></tr></thead>
+                  <tbody id="service-rows"></tbody>
+                </table>
+              </div>
+              <form class="card-body" id="service-form">
+                <h3 id="service-form-title">Adicionar serviço</h3>
+                <div class="form-grid form-grid-3">
+                  <div class="field span-2"><label for="s-servico">Serviço</label><select id="s-servico" name="id_servico" required></select></div>
+                  <div class="field"><label for="s-quantidade">Quantidade</label><input id="s-quantidade" name="quantidade" type="number" min="0.5" step="0.5" value="1" required></div>
+                  <div class="field span-2"><label for="s-descricao">Descrição na ordem</label><input id="s-descricao" name="descricao_snapshot" type="text" maxlength="150" required></div>
+                  <div class="field"><label for="s-valor">Valor unitário (R$)</label><input id="s-valor" name="valor_unitario" type="number" min="0" step="0.01" required></div>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" id="service-cancel" hidden>Cancelar edição</button>
+                  <button type="submit" class="btn btn-primary" id="service-submit">Adicionar serviço</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="card" aria-labelledby="parts-title">
+              <div class="card-header">
+                <div><h2 id="parts-title">Peças</h2><p>Cada peça adicionada sai do estoque; ao remover, a quantidade volta.</p></div>
+              </div>
+              <div class="table-wrap">
+                <table class="data stacked">
+                  <thead><tr><th scope="col">Peça</th><th scope="col" class="num">Qtd.</th><th scope="col" class="num">Valor unitário</th><th scope="col" class="num">Subtotal</th><th scope="col" class="actions"><span class="sr-only">Ações</span></th></tr></thead>
+                  <tbody id="part-rows"></tbody>
+                </table>
+              </div>
+              <form class="card-body" id="part-form">
+                <h3 id="part-form-title">Adicionar peça</h3>
+                <div class="form-grid form-grid-3">
+                  <div class="field span-2"><label for="p-peca">Peça</label><select id="p-peca" name="id_peca" required></select></div>
+                  <div class="field"><label for="p-quantidade">Quantidade</label><input id="p-quantidade" name="quantidade" type="number" min="1" step="1" value="1" required></div>
+                  <div class="field span-2"><label for="p-descricao">Descrição na ordem</label><input id="p-descricao" name="descricao_snapshot" type="text" maxlength="150" required></div>
+                  <div class="field"><label for="p-valor">Valor unitário (R$)</label><input id="p-valor" name="valor_unitario" type="number" min="0" step="0.01" required></div>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" id="part-cancel" hidden>Cancelar edição</button>
+                  <button type="submit" class="btn btn-primary" id="part-submit">Adicionar peça</button>
+                </div>
+              </form>
+              <div class="total-line"><span>Total da ordem (serviços e peças)</span><strong id="detail-total">R$ 0,00</strong></div>
+            </section>
+          </div>
+
+          <div class="stack">
+            <section class="card" aria-labelledby="progress-title">
+              <div class="card-header"><h2 id="progress-title">Andamento</h2></div>
+              <form class="card-body" id="status-form">
+                <div class="field">
+                  <label for="st-status">Próximo status</label>
+                  <select id="st-status" name="id_status_os" required></select>
+                </div>
+                <div class="field">
+                  <label for="st-observacao">Observação <span class="optional">(opcional)</span></label>
+                  <input id="st-observacao" name="observacao" type="text" maxlength="255" placeholder="O que mudou nesta etapa">
+                </div>
+                <div class="form-actions"><button type="submit" class="btn btn-primary">Atualizar status</button></div>
+              </form>
+              <p class="card-body muted" id="closed-note" hidden>Esta ordem está encerrada e não aceita novas alterações.</p>
+            </section>
+
+            <section class="card" aria-labelledby="history-title">
+              <div class="card-header"><h2 id="history-title">Histórico</h2></div>
+              <ol class="timeline" id="history-list"></ol>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <dialog class="modal" id="order-dialog" aria-labelledby="order-title">
+      <div class="modal-header">
+        <h2 id="order-title">Nova ordem de serviço</h2>
+        <button type="button" class="icon-button" data-close-modal aria-label="Fechar"><span data-icon="fechar"></span></button>
+      </div>
+      <div class="modal-body">
+        <form id="order-form">
+          <p class="form-error" id="order-error" role="alert" hidden></p>
+          <div class="form-grid">
+            <div class="field">
+              <label for="o-cliente">Cliente</label>
+              <select id="o-cliente" name="id_cliente" required></select>
+            </div>
+            <div class="field">
+              <label for="o-veiculo">Veículo</label>
+              <select id="o-veiculo" name="id_veiculo" required disabled><option value="">Selecione primeiro o cliente</option></select>
+              <span class="hint" id="o-veiculo-hint">Aparecem apenas os veículos do cliente escolhido.</span>
+            </div>
+            <div class="field span-2">
+              <label for="o-mecanico">Mecânico responsável <span class="optional">(opcional)</span></label>
+              <select id="o-mecanico" name="id_mecanico"></select>
+            </div>
+            <div class="field">
+              <label for="o-km">Quilometragem de entrada <span class="optional">(opcional)</span></label>
+              <input id="o-km" name="quilometragem_entrada" type="number" min="0" step="1" placeholder="45000">
+            </div>
+            <div class="field">
+              <label for="o-previsao">Previsão de conclusão <span class="optional">(opcional)</span></label>
+              <input id="o-previsao" name="previsao_conclusao" type="datetime-local">
+            </div>
+            <div class="field span-2">
+              <label for="o-diagnostico">Diagnóstico ou relato do cliente <span class="optional">(opcional)</span></label>
+              <textarea id="o-diagnostico" name="diagnostico" rows="2" placeholder="O que o cliente relatou ou o que foi observado"></textarea>
+            </div>
+            <div class="field span-2">
+              <label for="o-observacoes">Observações <span class="optional">(opcional)</span></label>
+              <textarea id="o-observacoes" name="observacoes" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="order-submit">Abrir ordem de serviço</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog class="modal narrow" id="assign-dialog" aria-labelledby="assign-title">
+      <div class="modal-header">
+        <h2 id="assign-title">Mecânico responsável</h2>
+        <button type="button" class="icon-button" data-close-modal aria-label="Fechar"><span data-icon="fechar"></span></button>
+      </div>
+      <div class="modal-body">
+        <form id="assign-form">
+          <p class="form-error" id="assign-error" role="alert" hidden></p>
+          <p class="modal-text" id="assign-current"></p>
+          <div class="field">
+            <label for="a-mecanico">Novo responsável</label>
+            <select id="a-mecanico" name="id_mecanico"></select>
+            <span class="hint">Aparecem todos os mecânicos ativos, com as ordens que cada um já tem em andamento.</span>
+          </div>
+          <div class="field">
+            <label for="a-observacao">Motivo da troca <span class="optional">(opcional)</span></label>
+            <input id="a-observacao" name="observacao" type="text" maxlength="120">
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" data-close-modal>Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="assign-submit">Salvar responsável</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
   </body>
 </html>
