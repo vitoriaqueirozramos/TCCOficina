@@ -7,7 +7,7 @@ function getPool() {
     return pool;
   }
 
-  const { DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER } = process.env;
+  const { DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_SSL, DB_USER } = process.env;
   if (!DB_USER || !DB_NAME) {
     throw new Error('DB_USER and DB_NAME must be configured.');
   }
@@ -30,7 +30,9 @@ function getPool() {
     database: DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    // Bancos em nuvem (TiDB Cloud, por exemplo) exigem conexão TLS: defina DB_SSL=true.
+    ...(/^(1|true)$/i.test(DB_SSL || '') ? { ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true } } : {})
   });
 
   return pool;
