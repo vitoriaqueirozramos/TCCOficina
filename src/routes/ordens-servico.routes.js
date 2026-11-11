@@ -1,6 +1,7 @@
 const express = require('express');
 const { getPool } = require('../config/database');
 const { authenticate } = require('../middleware/auth.middleware');
+const { lockPartWithBalance } = require('../utils/estoque');
 
 const router = express.Router();
 const STATUS_TRANSITIONS = {
@@ -36,6 +37,65 @@ function requireMechanicProfile(request, response, next) {
   return next();
 }
 
+const CLOSED_STATUSES = ['CONCLUIDA', 'CANCELADA'];
+
+// Uma linha do histórico com o mesmo status antes e depois registra troca de responsável.
+function withHistoryType(row) {
+  const responsavel = row.id_status_anterior !== null && Number(row.id_status_anterior) === Number(row.id_status_novo);
+  return { ...row, tipo: responsavel ? 'RESPONSAVEL' : 'STATUS' };
+}
+
+async function loadHistory(executor, idOs) {
+  const [rows] = await executor.execute(
+    `SELECT hs.id_historico_status,
+            hs.id_os,
+            hs.id_status_anterior,
+            sa.nome AS status_anterior_nome,
+            hs.id_status_novo,
+            sn.nome AS status_novo_nome,
+            sn.codigo AS status_novo_codigo,
+            hs.alterado_por,
+            ua.nome AS alterado_por_nome,
+            hs.alterado_em,
+            hs.observacao
+     FROM historico_status_os AS hs
+     LEFT JOIN status_os AS sa ON sa.id_status_os = hs.id_status_anterior
+     JOIN status_os AS sn ON sn.id_status_os = hs.id_status_novo
+     JOIN usuarios AS ua ON ua.id_usuario = hs.alterado_por
+     WHERE hs.id_os = ?
+     ORDER BY hs.alterado_em DESC, hs.id_historico_status DESC`,
+    [idOs]
+  );
+  return rows.map(withHistoryType);
+}
+
+// Só mecânicos existentes e ativos podem receber ordens.
+async function checkAssignableMechanic(executor, idMecanico) {
+  const [rows] = await executor.execute(
+    `SELECT m.id_mecanico, m.ativo, u.nome
+     FROM mecanicos AS m JOIN usuarios AS u ON u.id_usuario = m.id_usuario
+     WHERE m.id_mecanico = ? LIMIT 1`,
+    [idMecanico]
+  );
+  if (rows.length === 0) {
+    return { status: 400, error: 'O mecânico informado não existe.' };
+  }
+  if (!rows[0].ativo) {
+    return { status: 409, error: `${rows[0].nome} está inativo e não pode receber ordens de serviço.` };
+  }
+  return { mecanico: rows[0] };
+}
+
+async function loadStatusCatalog(executor) {
+  const [rows] = await executor.execute('SELECT id_status_os, codigo, nome FROM status_os ORDER BY id_status_os');
+  return rows;
+}
+
+function transitionsFor(statusCatalog, currentCode) {
+  const allowed = STATUS_TRANSITIONS[currentCode] || [];
+  return statusCatalog.filter((status) => allowed.includes(status.codigo));
+}
+
 function toMysqlDateTime(value) {
   if (!value) {
     return null;
@@ -62,6 +122,7 @@ router.get('/minhas', authenticate, requireMechanicProfile, async (request, resp
               status_os.nome AS status_nome,
               os.aberta_em,
               os.previsao_conclusao,
+              os.quilometragem_entrada,
               os.diagnostico,
               os.observacoes
        FROM ordens_servico AS os
@@ -158,17 +219,69 @@ router.post('/:id_os/meu-status', authenticate, requireMechanicProfile, async (r
 
 router.use(authenticate, requireOrderAccess);
 
-router.get('/', async (_request, response, next) => {
+// Catálogo de status e transições permitidas, para a interface não depender de IDs fixos.
+router.get('/status', async (_request, response, next) => {
   try {
+    const catalog = await loadStatusCatalog(getPool());
+    response.json({
+      status: catalog.map((status) => ({
+        ...status,
+        transicoes: transitionsFor(catalog, status.codigo).map((target) => target.id_status_os)
+      }))
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/', async (request, response, next) => {
+  try {
+    const filters = [];
+    const params = [];
+    const statusCode = typeof request.query.status === 'string' ? request.query.status.trim().toUpperCase() : '';
+    if (statusCode) {
+      filters.push('status_os.codigo = ?');
+      params.push(statusCode);
+    }
+    const mechanicFilter = typeof request.query.id_mecanico === 'string' ? request.query.id_mecanico.trim() : '';
+    if (mechanicFilter === 'nenhum') {
+      filters.push('os.id_mecanico IS NULL');
+    } else if (mechanicFilter) {
+      const idMecanico = Number(mechanicFilter);
+      if (!Number.isInteger(idMecanico) || idMecanico <= 0) {
+        return response.status(400).json({ error: 'Informe um mecânico válido.' });
+      }
+      filters.push('os.id_mecanico = ?');
+      params.push(idMecanico);
+    }
+    const search = typeof request.query.q === 'string' ? request.query.q.trim() : '';
+    if (search) {
+      filters.push('(c.nome LIKE ? OR v.placa LIKE ? OR CAST(os.id_os AS CHAR) = ?)');
+      params.push(`%${search}%`, `%${search}%`, search.replace(/^#/, ''));
+    }
+    let limitClause = '';
+    if (request.query.limit !== undefined) {
+      const limit = Number(request.query.limit);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 500) {
+        return response.status(400).json({ error: 'Informe um limite entre 1 e 500.' });
+      }
+      limitClause = 'LIMIT ?';
+      params.push(limit);
+    }
+    const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+
     const [rows] = await getPool().execute(
       `SELECT os.id_os,
               os.id_cliente,
               c.nome AS cliente_nome,
               os.id_veiculo,
               v.placa AS veiculo_placa,
+              v.marca AS veiculo_marca,
+              v.modelo AS veiculo_modelo,
               os.id_mecanico,
               u_mec.nome AS mecanico_nome,
               os.id_status_os,
+              status_os.codigo AS status_codigo,
               status_os.nome AS status_nome,
               os.aberta_por,
               u_ab.nome AS aberta_por_nome,
@@ -189,12 +302,15 @@ router.get('/', async (_request, response, next) => {
        JOIN usuarios AS u_ab ON u_ab.id_usuario = os.aberta_por
        LEFT JOIN mecanicos AS m ON m.id_mecanico = os.id_mecanico
        LEFT JOIN usuarios AS u_mec ON u_mec.id_usuario = m.id_usuario
-       ORDER BY os.aberta_em DESC`
+       ${whereClause}
+       ORDER BY os.aberta_em DESC, os.id_os DESC
+       ${limitClause}`,
+      params
     );
 
-    response.json({ ordens: rows });
+    return response.json({ ordens: rows });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -211,9 +327,12 @@ router.get('/:id_os', async (request, response, next) => {
               c.nome AS cliente_nome,
               os.id_veiculo,
               v.placa AS veiculo_placa,
+              v.marca AS veiculo_marca,
+              v.modelo AS veiculo_modelo,
               os.id_mecanico,
               u_mec.nome AS mecanico_nome,
               os.id_status_os,
+              status_os.codigo AS status_codigo,
               status_os.nome AS status_nome,
               os.aberta_por,
               u_ab.nome AS aberta_por_nome,
@@ -243,7 +362,8 @@ router.get('/:id_os', async (request, response, next) => {
       return response.status(404).json({ error: 'Ordem de serviço não encontrada.' });
     }
 
-    return response.json({ ordem: rows[0] });
+    const transicoes = transitionsFor(await loadStatusCatalog(getPool()), rows[0].status_codigo);
+    return response.json({ ordem: rows[0], transicoes });
   } catch (error) {
     return next(error);
   }
@@ -285,20 +405,55 @@ router.post('/', async (request, response, next) => {
     return response.status(400).json({ error: 'Informe uma quilometragem válida.' });
   }
 
+  let connection;
   try {
-    const [statusRows] = await getPool().execute(
+    connection = await getPool().getConnection();
+    await connection.beginTransaction();
+    const fail = async (status, error) => {
+      await connection.rollback();
+      return response.status(status).json({ error });
+    };
+
+    const [statusRows] = await connection.execute(
       'SELECT id_status_os FROM status_os WHERE codigo = ? LIMIT 1',
       ['ABERTA']
     );
     if (statusRows.length === 0) {
-      return response.status(500).json({ error: 'Status inicial da OS não foi encontrado.' });
+      return fail(500, 'Status inicial da OS não foi encontrado.');
     }
     const resolvedStatusId = statusRows[0].id_status_os;
     if (idStatus !== null && idStatus !== resolvedStatusId) {
-      return response.status(400).json({ error: 'Uma nova ordem deve iniciar no status Aberta.' });
+      return fail(400, 'Uma nova ordem deve iniciar no status Aberta.');
     }
 
-    const [result] = await getPool().execute(
+    const [clientRows] = await connection.execute('SELECT ativo FROM clientes WHERE id_cliente = ? LIMIT 1', [idCliente]);
+    if (clientRows.length === 0) {
+      return fail(400, 'O cliente informado não existe.');
+    }
+    if (!clientRows[0].ativo) {
+      return fail(409, 'Cliente inativo não pode abrir novas ordens de serviço.');
+    }
+
+    // O navegador já filtra os veículos pelo cliente; a regra é conferida de novo aqui.
+    const [vehicleRows] = await connection.execute('SELECT id_cliente, ativo, placa FROM veiculos WHERE id_veiculo = ? LIMIT 1', [idVeiculo]);
+    if (vehicleRows.length === 0) {
+      return fail(400, 'O veículo informado não existe.');
+    }
+    if (Number(vehicleRows[0].id_cliente) !== idCliente) {
+      return fail(409, `O veículo ${vehicleRows[0].placa} não pertence ao cliente selecionado.`);
+    }
+    if (!vehicleRows[0].ativo) {
+      return fail(409, 'Veículo inativo não pode receber novas ordens de serviço.');
+    }
+
+    if (idMecanico !== null) {
+      const check = await checkAssignableMechanic(connection, idMecanico);
+      if (check.error) {
+        return fail(check.status, check.error);
+      }
+    }
+
+    const [result] = await connection.execute(
       `INSERT INTO ordens_servico (
         id_cliente, id_veiculo, id_mecanico, id_status_os, aberta_por,
         previsao_conclusao, quilometragem_entrada, diagnostico, observacoes
@@ -315,16 +470,24 @@ router.post('/', async (request, response, next) => {
         observacoes || null
       ]
     );
+    await connection.execute(
+      `INSERT INTO historico_status_os (id_os, id_status_anterior, id_status_novo, alterado_por, observacao)
+       VALUES (?, NULL, ?, ?, 'Ordem de serviço aberta.')`,
+      [result.insertId, resolvedStatusId, request.user.id_usuario]
+    );
 
-    const [rows] = await getPool().execute(
+    const [rows] = await connection.execute(
       `SELECT os.id_os,
               os.id_cliente,
               c.nome AS cliente_nome,
               os.id_veiculo,
               v.placa AS veiculo_placa,
+              v.marca AS veiculo_marca,
+              v.modelo AS veiculo_modelo,
               os.id_mecanico,
               u_mec.nome AS mecanico_nome,
               os.id_status_os,
+              status_os.codigo AS status_codigo,
               status_os.nome AS status_nome,
               os.aberta_por,
               u_ab.nome AS aberta_por_nome,
@@ -346,13 +509,95 @@ router.post('/', async (request, response, next) => {
       [result.insertId]
     );
 
+    await connection.commit();
     return response.status(201).json({ ordem: rows[0] });
   } catch (error) {
-    if (error.code === 'ER_NO_REFERENCED_ROW_2') {
-      return response.status(400).json({ error: 'Cliente, veículo, mecânico ou status informado não existe.' });
+    if (connection) await connection.rollback();
+    return next(error);
+  } finally {
+    connection?.release();
+  }
+});
+
+// Define, troca ou remove o mecânico responsável por uma ordem em andamento.
+router.patch('/:id_os/mecanico', async (request, response, next) => {
+  let connection;
+  try {
+    const idOs = Number(request.params.id_os);
+    const raw = request.body?.id_mecanico;
+    const idMecanico = raw === null || raw === '' ? null : Number(raw);
+    const observacao = typeof request.body?.observacao === 'string' ? request.body.observacao.trim() : '';
+
+    if (!Number.isInteger(idOs) || idOs <= 0) {
+      return response.status(400).json({ error: 'Informe uma ordem de serviço válida.' });
+    }
+    if (raw === undefined || (idMecanico !== null && (!Number.isInteger(idMecanico) || idMecanico <= 0))) {
+      return response.status(400).json({ error: 'Informe um mecânico válido ou null para deixar a ordem sem responsável.' });
+    }
+    if (observacao.length > 120) {
+      return response.status(400).json({ error: 'A observação deve ter até 120 caracteres.' });
     }
 
+    connection = await getPool().getConnection();
+    await connection.beginTransaction();
+    const fail = async (status, error) => {
+      await connection.rollback();
+      return response.status(status).json({ error });
+    };
+
+    const [orderRows] = await connection.execute(
+      `SELECT os.id_mecanico, os.id_status_os, status_os.codigo AS status_codigo, u.nome AS mecanico_nome
+       FROM ordens_servico AS os
+       JOIN status_os ON status_os.id_status_os = os.id_status_os
+       LEFT JOIN mecanicos AS m ON m.id_mecanico = os.id_mecanico
+       LEFT JOIN usuarios AS u ON u.id_usuario = m.id_usuario
+       WHERE os.id_os = ? LIMIT 1 FOR UPDATE`,
+      [idOs]
+    );
+    if (orderRows.length === 0) {
+      return fail(404, 'Ordem de serviço não encontrada.');
+    }
+    const order = orderRows[0];
+    if (CLOSED_STATUSES.includes(order.status_codigo)) {
+      return fail(409, 'Não é possível alterar o responsável de uma ordem encerrada.');
+    }
+    const atual = order.id_mecanico === null ? null : Number(order.id_mecanico);
+    if (atual === idMecanico) {
+      return fail(409, idMecanico === null ? 'A ordem já está sem responsável.' : 'A ordem já está atribuída a este mecânico.');
+    }
+
+    let novoNome = null;
+    if (idMecanico !== null) {
+      const check = await checkAssignableMechanic(connection, idMecanico);
+      if (check.error) {
+        return fail(check.status, check.error);
+      }
+      novoNome = check.mecanico.nome;
+    }
+
+    await connection.execute('UPDATE ordens_servico SET id_mecanico = ? WHERE id_os = ?', [idMecanico, idOs]);
+    let descricao;
+    if (atual === null) descricao = `Responsável definido: ${novoNome}.`;
+    else if (idMecanico === null) descricao = `Responsável removido (antes: ${order.mecanico_nome}).`;
+    else descricao = `Responsável alterado: ${order.mecanico_nome} → ${novoNome}.`;
+    await connection.execute(
+      `INSERT INTO historico_status_os (id_os, id_status_anterior, id_status_novo, alterado_por, observacao)
+       VALUES (?, ?, ?, ?, ?)`,
+      [idOs, order.id_status_os, order.id_status_os, request.user.id_usuario, observacao ? `${descricao} ${observacao}` : descricao]
+    );
+
+    const historico = await loadHistory(connection, idOs);
+    await connection.commit();
+    return response.json({
+      ordem: { id_os: idOs, id_mecanico: idMecanico, mecanico_nome: novoNome },
+      historico,
+      message: descricao
+    });
+  } catch (error) {
+    if (connection) await connection.rollback();
     return next(error);
+  } finally {
+    connection?.release();
   }
 });
 
@@ -368,27 +613,7 @@ router.get('/:id_os/historico-status', async (request, response, next) => {
       return response.status(404).json({ error: 'Ordem de serviço não encontrada.' });
     }
 
-    const [rows] = await getPool().execute(
-      `SELECT hs.id_historico_status,
-              hs.id_os,
-              hs.id_status_anterior,
-              sa.nome AS status_anterior_nome,
-              hs.id_status_novo,
-              sn.nome AS status_novo_nome,
-              hs.alterado_por,
-              ua.nome AS alterado_por_nome,
-              hs.alterado_em,
-              hs.observacao
-       FROM historico_status_os AS hs
-       LEFT JOIN status_os AS sa ON sa.id_status_os = hs.id_status_anterior
-       JOIN status_os AS sn ON sn.id_status_os = hs.id_status_novo
-       JOIN usuarios AS ua ON ua.id_usuario = hs.alterado_por
-       WHERE hs.id_os = ?
-       ORDER BY hs.alterado_em DESC`,
-      [idOs]
-    );
-
-    return response.json({ historico: rows });
+    return response.json({ historico: await loadHistory(getPool(), idOs) });
   } catch (error) {
     return next(error);
   }
@@ -496,9 +721,12 @@ router.post('/:id_os/status', async (request, response, next) => {
               c.nome AS cliente_nome,
               os.id_veiculo,
               v.placa AS veiculo_placa,
+              v.marca AS veiculo_marca,
+              v.modelo AS veiculo_modelo,
               os.id_mecanico,
               u_mec.nome AS mecanico_nome,
               os.id_status_os,
+              status_os.codigo AS status_codigo,
               status_os.nome AS status_nome,
               os.aberta_por,
               u_ab.nome AS aberta_por_nome,
@@ -520,28 +748,11 @@ router.post('/:id_os/status', async (request, response, next) => {
       [idOs]
     );
 
-    const [historicoRows] = await connection.execute(
-      `SELECT hs.id_historico_status,
-              hs.id_os,
-              hs.id_status_anterior,
-              sa.nome AS status_anterior_nome,
-              hs.id_status_novo,
-              sn.nome AS status_novo_nome,
-              hs.alterado_por,
-              ua.nome AS alterado_por_nome,
-              hs.alterado_em,
-              hs.observacao
-       FROM historico_status_os AS hs
-       LEFT JOIN status_os AS sa ON sa.id_status_os = hs.id_status_anterior
-       JOIN status_os AS sn ON sn.id_status_os = hs.id_status_novo
-       JOIN usuarios AS ua ON ua.id_usuario = hs.alterado_por
-       WHERE hs.id_os = ?
-       ORDER BY hs.alterado_em DESC`,
-      [idOs]
-    );
+    const historicoRows = await loadHistory(connection, idOs);
+    const transicoes = transitionsFor(await loadStatusCatalog(connection), statusNovoCodigo);
 
     await connection.commit();
-    return response.json({ ordem: rows[0], historico: historicoRows, ultimo_historico_id: historyResult.insertId });
+    return response.json({ ordem: rows[0], historico: historicoRows, transicoes, ultimo_historico_id: historyResult.insertId });
   } catch (error) {
     if (connection) {
       await connection.rollback();
@@ -632,10 +843,14 @@ router.post('/:id_os/os-servicos', async (request, response, next) => {
       return response.status(409).json({ error: 'Não é possível adicionar serviços a uma ordem encerrada.' });
     }
 
-    const [serviceRows] = await connection.execute('SELECT id_servico FROM servicos WHERE id_servico = ? LIMIT 1', [idServico]);
+    const [serviceRows] = await connection.execute('SELECT id_servico, ativo FROM servicos WHERE id_servico = ? LIMIT 1', [idServico]);
     if (serviceRows.length === 0) {
       await connection.rollback();
       return response.status(404).json({ error: 'Serviço não encontrado.' });
+    }
+    if (!serviceRows[0].ativo) {
+      await connection.rollback();
+      return response.status(409).json({ error: 'Serviço inativo não pode ser adicionado a uma ordem.' });
     }
 
     const [result] = await connection.execute(
@@ -851,22 +1066,17 @@ router.post('/:id_os/os-pecas', async (request, response, next) => {
       return response.status(409).json({ error: 'Não é possível adicionar peças a uma ordem encerrada.' });
     }
 
-    const [partRows] = await connection.execute(
-      'SELECT id_peca FROM pecas WHERE id_peca = ? LIMIT 1 FOR UPDATE',
-      [idPeca]
-    );
-    if (partRows.length === 0) {
+    const part = await lockPartWithBalance(connection, idPeca);
+    if (!part) {
       await connection.rollback();
       return response.status(404).json({ error: 'Peça não encontrada.' });
     }
+    if (!part.ativo) {
+      await connection.rollback();
+      return response.status(409).json({ error: 'Peça inativa não pode ser adicionada a uma ordem.' });
+    }
 
-    const [balanceRows] = await connection.execute(
-      `SELECT COALESCE(SUM(quantidade_delta), 0) AS saldo_atual
-       FROM movimentos_estoque
-       WHERE id_peca = ?`,
-      [idPeca]
-    );
-    const saldoAtual = Number(balanceRows[0].saldo_atual);
+    const saldoAtual = part.saldo_atual;
     if (saldoAtual < quantidade) {
       await connection.rollback();
       return response.status(409).json({
@@ -958,17 +1168,17 @@ router.put('/:id_os/os-pecas/:id_os_peca', async (request, response, next) => {
     const variacao = quantidade - Number(itemRows[0].quantidade);
     if (variacao !== 0) {
       const idPeca = itemRows[0].id_peca;
-      const [partRows] = await connection.execute('SELECT id_peca FROM pecas WHERE id_peca = ? LIMIT 1 FOR UPDATE', [idPeca]);
-      if (partRows.length === 0) {
+      const part = await lockPartWithBalance(connection, idPeca);
+      if (!part) {
         await connection.rollback();
         return response.status(404).json({ error: 'Peça não encontrada.' });
       }
       if (variacao > 0) {
-        const [balanceRows] = await connection.execute(
-          'SELECT COALESCE(SUM(quantidade_delta), 0) AS saldo_atual FROM movimentos_estoque WHERE id_peca = ?',
-          [idPeca]
-        );
-        const saldoAtual = Number(balanceRows[0].saldo_atual);
+        if (!part.ativo) {
+          await connection.rollback();
+          return response.status(409).json({ error: 'Peça inativa: não é possível aumentar a quantidade consumida.' });
+        }
+        const saldoAtual = part.saldo_atual;
         if (saldoAtual < variacao) {
           await connection.rollback();
           return response.status(409).json({ error: 'Estoque insuficiente para aumentar a quantidade da peça.', saldo_disponivel: saldoAtual });

@@ -22,4 +22,17 @@ function parseActiveFilter(value) {
   return Number.NaN;
 }
 
-module.exports = { paginationMetadata, parseActiveFilter, parsePagination };
+// Aceita os formatos que chegam do navegador e do MySQL (true/false, 1/0 e seus textos).
+// Devolve null quando o valor não representa um booleano.
+function parseBoolean(value) {
+  if (value === true || value === 1 || value === '1' || value === 'true') return true;
+  if (value === false || value === 0 || value === '0' || value === 'false') return false;
+  return null;
+}
+
+function parsePositiveId(value) {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+module.exports = { paginationMetadata, parseActiveFilter, parseBoolean, parsePagination, parsePositiveId };

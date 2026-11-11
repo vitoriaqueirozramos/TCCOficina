@@ -10,7 +10,8 @@ router.get('/', (_request, response) => {
 router.get('/database', async (_request, response) => {
   try {
     await getPool().query('SELECT 1');
-    response.json({ status: 'ok', database: 'connected' });
+    // Em modo de teste a API informa o ambiente, para a suíte confirmar que não está no banco principal.
+    response.json({ status: 'ok', database: 'connected', ...(process.env.NODE_ENV === 'test' ? { ambiente: 'test' } : {}) });
   } catch {
     response.status(503).json({ status: 'unavailable', database: 'disconnected' });
   }

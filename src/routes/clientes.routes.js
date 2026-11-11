@@ -1,7 +1,7 @@
 const express = require('express');
 const { getPool } = require('../config/database');
 const { authenticate } = require('../middleware/auth.middleware');
-const { paginationMetadata, parseActiveFilter, parsePagination } = require('../utils/list-query');
+const { paginationMetadata, parseActiveFilter, parseBoolean, parsePagination } = require('../utils/list-query');
 
 const router = express.Router();
 
@@ -50,6 +50,18 @@ router.get('/', async (request, response, next) => {
     );
 
     response.json({ clientes: rows, pagination: paginationMetadata(pagination.page, pagination.limit, Number(countRows[0].total)) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Lista completa de clientes ativos para os seletores (sem a paginação das telas de cadastro).
+router.get('/opcoes', async (_request, response, next) => {
+  try {
+    const [rows] = await getPool().execute(
+      'SELECT id_cliente, nome, documento FROM clientes WHERE ativo = TRUE ORDER BY nome ASC'
+    );
+    response.json({ clientes: rows });
   } catch (error) {
     next(error);
   }
@@ -123,9 +135,9 @@ router.put('/:id_cliente', async (request, response, next) => {
 
 router.patch('/:id_cliente/ativo', async (request, response, next) => {
   const idCliente = Number(request.params.id_cliente);
-  const ativo = request.body?.ativo;
-  if (!Number.isInteger(idCliente) || idCliente <= 0 || typeof ativo !== 'boolean') {
-    return response.status(400).json({ error: 'Informe um cliente e uma situação válida.' });
+  const ativo = parseBoolean(request.body?.ativo);
+  if (!Number.isInteger(idCliente) || idCliente <= 0 || ativo === null) {
+    return response.status(400).json({ error: 'Informe um cliente e uma situação válida (ativo: true ou false).' });
   }
 
   try {
@@ -144,7 +156,7 @@ router.patch('/:id_cliente/ativo', async (request, response, next) => {
       'SELECT id_cliente, nome, documento, telefone, email, endereco, ativo, criado_em FROM clientes WHERE id_cliente = ? LIMIT 1',
       [idCliente]
     );
-    return response.json({ cliente: rows[0] });
+    return response.json({ cliente: rows[0], message: ativo ? 'Cliente ativado.' : 'Cliente inativado.' });
   } catch (error) {
     return next(error);
   }

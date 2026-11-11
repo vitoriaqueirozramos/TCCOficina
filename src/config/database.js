@@ -12,6 +12,11 @@ function getPool() {
     throw new Error('DB_USER and DB_NAME must be configured.');
   }
 
+  // Trava de segurança: em modo de teste a aplicação só aceita um banco terminado em _test.
+  if (process.env.NODE_ENV === 'test' && !/_test$/.test(DB_NAME)) {
+    throw new Error('NODE_ENV=test exige um banco de testes (DB_NAME terminado em _test).');
+  }
+
   const port = Number(DB_PORT || 3306);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error('DB_PORT must be a valid TCP port.');

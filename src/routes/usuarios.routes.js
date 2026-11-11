@@ -22,9 +22,11 @@ router.use(authenticate, requireFuncionarioAccess);
 router.get('/', async (_request, response, next) => {
   try {
     const [rows] = await getPool().execute(
-      `SELECT id_usuario, nome, email
-       FROM usuarios
-       ORDER BY nome ASC`
+      `SELECT u.id_usuario, u.nome, u.email, u.ativo, p.nome AS perfil, m.id_mecanico
+       FROM usuarios AS u
+       JOIN perfis AS p ON p.id_perfil = u.id_perfil
+       LEFT JOIN mecanicos AS m ON m.id_usuario = u.id_usuario
+       ORDER BY u.nome ASC`
     );
 
     response.json({ usuarios: rows });

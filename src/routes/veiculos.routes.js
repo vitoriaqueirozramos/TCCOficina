@@ -1,7 +1,7 @@
 const express = require('express');
 const { getPool } = require('../config/database');
 const { authenticate } = require('../middleware/auth.middleware');
-const { paginationMetadata, parseActiveFilter, parsePagination } = require('../utils/list-query');
+const { paginationMetadata, parseActiveFilter, parseBoolean, parsePagination } = require('../utils/list-query');
 
 const router = express.Router();
 
@@ -61,6 +61,26 @@ router.get('/', async (request, response, next) => {
     response.json({ veiculos: rows, pagination: paginationMetadata(pagination.page, pagination.limit, Number(countRows[0].total)) });
   } catch (error) {
     next(error);
+  }
+});
+
+// Veículos ativos para os seletores; com id_cliente, apenas os veículos daquele cliente.
+router.get('/opcoes', async (request, response, next) => {
+  try {
+    const clientId = request.query.id_cliente === undefined ? null : Number(request.query.id_cliente);
+    if (clientId !== null && (!Number.isInteger(clientId) || clientId <= 0)) {
+      return response.status(400).json({ error: 'Informe um cliente válido.' });
+    }
+    const [rows] = await getPool().execute(
+      `SELECT v.id_veiculo, v.id_cliente, v.placa, v.marca, v.modelo, v.ano
+       FROM veiculos AS v
+       WHERE v.ativo = TRUE ${clientId === null ? '' : 'AND v.id_cliente = ?'}
+       ORDER BY v.placa ASC`,
+      clientId === null ? [] : [clientId]
+    );
+    return response.json({ veiculos: rows });
+  } catch (error) {
+    return next(error);
   }
 });
 
@@ -138,9 +158,9 @@ router.put('/:id_veiculo', async (request, response, next) => {
 
 router.patch('/:id_veiculo/ativo', async (request, response, next) => {
   const idVeiculo = Number(request.params.id_veiculo);
-  const ativo = request.body?.ativo;
-  if (!Number.isInteger(idVeiculo) || idVeiculo <= 0 || typeof ativo !== 'boolean') {
-    return response.status(400).json({ error: 'Informe um veículo e uma situação válida.' });
+  const ativo = parseBoolean(request.body?.ativo);
+  if (!Number.isInteger(idVeiculo) || idVeiculo <= 0 || ativo === null) {
+    return response.status(400).json({ error: 'Informe um veículo e uma situação válida (ativo: true ou false).' });
   }
 
   try {
@@ -151,7 +171,13 @@ router.patch('/:id_veiculo/ativo', async (request, response, next) => {
         return response.status(404).json({ error: 'Veículo não encontrado.' });
       }
     }
-    return response.json({ message: ativo ? 'Veículo reativado.' : 'Veículo arquivado.' });
+    const [rows] = await getPool().execute(
+      `SELECT v.id_veiculo, v.id_cliente, c.nome AS cliente_nome, v.placa, v.chassi, v.marca, v.modelo, v.ano, v.cor, v.ativo, v.criado_em
+       FROM veiculos AS v JOIN clientes AS c ON c.id_cliente = v.id_cliente
+       WHERE v.id_veiculo = ? LIMIT 1`,
+      [idVeiculo]
+    );
+    return response.json({ veiculo: rows[0], message: ativo ? 'Veículo ativado.' : 'Veículo inativado.' });
   } catch (error) {
     return next(error);
   }
