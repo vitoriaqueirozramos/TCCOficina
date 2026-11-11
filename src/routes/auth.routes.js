@@ -3,13 +3,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { getPool } = require('../config/database');
-const { authCookieOptions, clearAuthCookie, cookieName, getJwtSecret } = require('../config/auth');
+const { authCookieOptions, clearAuthCookie, cookieName, getJwtSecret, tokenLifetimeMs } = require('../config/auth');
 const { authenticate } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
+  skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_request, response) => {
@@ -44,7 +45,7 @@ router.post('/login', loginLimiter, async (request, response, next) => {
     const token = jwt.sign(
       { sub: String(user.id_usuario) },
       getJwtSecret(),
-      { expiresIn: '15m', issuer: 'oficinatech' }
+      { expiresIn: Math.floor(tokenLifetimeMs / 1000), issuer: 'oficinatech' }
     );
 
     response.cookie(cookieName, token, authCookieOptions());

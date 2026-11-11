@@ -1,7 +1,9 @@
 const crypto = require('node:crypto');
 
 const cookieName = 'oficinatech_token';
-const tokenLifetimeMs = 15 * 60 * 1000;
+// Duração da sessão em minutos (SESSION_MINUTES); padrão de 8 horas, um turno de trabalho.
+const sessionMinutes = Number(process.env.SESSION_MINUTES);
+const tokenLifetimeMs = (Number.isInteger(sessionMinutes) && sessionMinutes >= 5 && sessionMinutes <= 1440 ? sessionMinutes : 480) * 60 * 1000;
 let developmentSecret;
 
 function getJwtSecret() {
