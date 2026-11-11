@@ -5,3 +5,5 @@ node_modules/
 coverage/
 *.log
 npm-debug.log*
+.claude/
+backups/
