@@ -45,8 +45,8 @@ router.get('/', async (request, response, next) => {
        FROM clientes
        ${whereClause}
        ORDER BY nome ASC
-       LIMIT ? OFFSET ?`,
-      [...params, pagination.limit, pagination.offset]
+       LIMIT ${Number.parseInt(pagination.limit, 10)} OFFSET ${Number.parseInt(pagination.offset, 10)}`,
+      params
     );
 
     response.json({ clientes: rows, pagination: paginationMetadata(pagination.page, pagination.limit, Number(countRows[0].total)) });

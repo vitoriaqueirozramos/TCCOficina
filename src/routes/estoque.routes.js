@@ -106,8 +106,8 @@ router.get('/produtos', async (request, response, next) => {
        FROM vw_saldo_estoque
        ${whereClause}
        ORDER BY ${sortColumn} ${direction}, nome ASC
-       LIMIT ? OFFSET ?`,
-      [...params, pagination.limit, pagination.offset]
+       LIMIT ${Number.parseInt(pagination.limit, 10)} OFFSET ${Number.parseInt(pagination.offset, 10)}`,
+      params
     );
     return response.json({ produtos: rows, pagination: paginationMetadata(pagination.page, pagination.limit, Number(countRows[0].total)) });
   } catch (error) {
@@ -205,8 +205,8 @@ router.get('/movimentos', async (request, response, next) => {
       `${MOVEMENT_SELECT}
        ${whereClause}
        ORDER BY m.criado_em DESC, m.id_movimento DESC
-       LIMIT ? OFFSET ?`,
-      [...params, pagination.limit, pagination.offset]
+       LIMIT ${Number.parseInt(pagination.limit, 10)} OFFSET ${Number.parseInt(pagination.offset, 10)}`,
+      params
     );
 
     return response.json({ movimentos: rows, pagination: paginationMetadata(pagination.page, pagination.limit, Number(countRows[0].total)) });

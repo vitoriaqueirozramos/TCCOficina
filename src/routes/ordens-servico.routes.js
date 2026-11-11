@@ -265,8 +265,7 @@ router.get('/', async (request, response, next) => {
       if (!Number.isInteger(limit) || limit < 1 || limit > 500) {
         return response.status(400).json({ error: 'Informe um limite entre 1 e 500.' });
       }
-      limitClause = 'LIMIT ?';
-      params.push(limit);
+      limitClause = `LIMIT ${Number.parseInt(limit, 10)}`;
     }
     const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 

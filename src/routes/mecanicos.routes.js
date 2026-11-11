@@ -103,8 +103,8 @@ router.get('/', async (request, response, next) => {
       `${MECHANIC_SELECT}
        ${whereClause}
        ORDER BY u.nome ASC
-       LIMIT ? OFFSET ?`,
-      [...params, pagination.limit, pagination.offset]
+       LIMIT ${Number.parseInt(pagination.limit, 10)} OFFSET ${Number.parseInt(pagination.offset, 10)}`,
+      params
     );
 
     return response.json({ mecanicos: rows, pagination: paginationMetadata(pagination.page, pagination.limit, Number(countRows[0].total)) });
