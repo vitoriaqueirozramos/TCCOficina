@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('../scripts/test-ambiente');
 
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
@@ -194,7 +194,7 @@ test('reject invalid status transitions and completion without items', async () 
     [idOs]
   );
   assert.equal(orderRows[0].status_codigo, 'ABERTA', 'rejected transition should leave current status unchanged');
-  assert.equal(historyRows.length, 0, 'rejected transition should not create history');
+  assert.equal(historyRows.length, 1, 'rejected transition should leave only the opening entry in history');
 });
 
 test('complete an order with items and persist completion timestamp', async () => {
@@ -339,8 +339,8 @@ test('list vehicle history with orders, services and parts', async () => {
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
     body: JSON.stringify({
       id_peca: partPayload.peca.id_peca,
-      quantidade_delta: 2,
-      motivo: 'ENTRADA',
+      quantidade: 2,
+      tipo: 'ENTRADA',
       observacao: 'Estoque para teste de histórico'
     })
   });

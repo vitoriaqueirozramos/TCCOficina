@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('../scripts/test-ambiente');
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
@@ -100,7 +100,7 @@ test('get, update, search and synchronize mechanic account status', async () => 
   const [userRows] = await getPool().execute('SELECT ativo FROM usuarios WHERE id_usuario = ?', [idUsuario]);
   assert.equal(userRows[0].ativo, 0, 'inactivating the mechanic should deactivate the linked account');
 
-  const searchResponse = await fetch(`${baseUrl}/api/mecanicos?q=${encodeURIComponent(updatedSpecialty)}`, {
+  const searchResponse = await fetch(`${baseUrl}/api/mecanicos?ativo=all&q=${encodeURIComponent(updatedSpecialty)}`, {
     headers: { Cookie: adminCookie }
   });
   const searched = await searchResponse.json();

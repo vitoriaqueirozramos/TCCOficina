@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('../scripts/test-ambiente');
 
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
@@ -101,8 +101,8 @@ async function addStock(idPeca, quantidade) {
     headers: { 'content-type': 'application/json', Cookie: adminCookie },
     body: JSON.stringify({
       id_peca: idPeca,
-      quantidade_delta: quantidade,
-      motivo: 'ENTRADA',
+      quantidade,
+      tipo: 'ENTRADA',
       observacao: 'Estoque para teste de OS'
     })
   });

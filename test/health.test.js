@@ -68,7 +68,7 @@ test('logout clears the authentication cookie', async () => {
 test('login page is served as static HTML', async () => {
   const response = await fetch(`${baseUrl}/login.html`);
   assert.equal(response.status, 200);
-  assert.match(await response.text(), /Entrar na oficina/);
+  assert.match(await response.text(), /id="login-form"/);
 });
 
 test('role middleware denies users without the required profile', () => {
